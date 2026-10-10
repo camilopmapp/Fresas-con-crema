@@ -236,7 +236,7 @@ const fmt = n => "$" + n.toLocaleString("es-CO");
 const $ = id => document.getElementById(id);
 const nombres = ["Tradicional","+1 topping","+2 toppings","+3 toppings","Super"];
 let cant = 1, cart = [];
-const nuevoCodigo = ()=>"FC-" + Math.random().toString(36).slice(2,6).toUpperCase();
+const nuevoCodigo = ()=>"FC-" + Math.random().toString(36).slice(2,6).padEnd(4,"0").toUpperCase();
 let codigo = nuevoCodigo();
 
 $("fecha").textContent = CONFIG.fechaVenta;

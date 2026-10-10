@@ -10,6 +10,6 @@ export const firebaseConfig = {
 };
 
 // UID de la cuenta que puede ver los pedidos (Authentication → Usuarios).
-export const ADMIN_UID = "";
+export const ADMIN_UID = "1cWBOeSjxth6DGMUk8UhxcKWGuJ3";
 
 export const FIREBASE_VERSION = "10.12.2";
