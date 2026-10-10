@@ -128,7 +128,6 @@ textarea{min-height:70px;resize:vertical}
 .check{width:64px;height:64px;border-radius:50%;background:var(--leaf);color:#fff;display:grid;place-items:center;font-size:34px;margin:0 auto}
 .done h2{justify-content:center;text-align:center;font-size:26px}
 .done .lead{text-align:center;color:var(--muted);margin:0}
-.code{font-family:var(--font-display);font-weight:700;font-size:40px;letter-spacing:.06em;text-align:center;color:var(--berry-deep);user-select:all;font-variant-numeric:tabular-nums}
 .sum{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
 .sum li{display:flex;justify-content:space-between;gap:10px}
 .sum .tt{border-top:1px dashed var(--line);padding-top:8px;font-weight:800;font-size:18px}
@@ -373,14 +372,13 @@ function mostrarConfirmacion(p){
   $("done").innerHTML = `<div class="done-in">
     <div class="check" aria-hidden="true">✓</div>
     <h2 id="doneT">¡Pedido recibido!</h2>
-    <p class="lead">Gracias, ${esc(p.nombre)}. Tu código de pedido es</p>
-    <div class="code">${p.codigo}</div>
+    <p class="lead">Gracias, ${esc(p.nombre)}. Ya tenemos tu pedido.</p>
     <div class="panel">
       <ul class="sum">${items}
         ${p.domicilio?`<li><span>Domicilio</span><span>${fmt(p.domicilio)}</span></li>`:""}
         <li class="tt"><span>Total</span><span>${fmt(p.total)}</span></li>
       </ul>
-      <p class="hint">${p.entrega==="Domicilio" ? `Entrega en ${esc(p.direccion)}${p.barrio?", "+esc(p.barrio):""}` : "Recoges tu pedido"} · ${esc(p.hora)}</p>
+      <p class="hint">Pedido ${p.codigo} · ${p.entrega==="Domicilio" ? `Entrega en ${esc(p.direccion)}${p.barrio?", "+esc(p.barrio):""}` : "Recoges tu pedido"} · ${esc(p.hora)}</p>
     </div>
     ${transf ? `<div class="pay">
       <span class="k">${p.pago==="Nequi" ? "Número Nequi" : "Llave Bre-B"}</span>
@@ -388,7 +386,7 @@ function mostrarConfirmacion(p){
       <span class="holder">Titular: ${CONFIG.titular} · Valor: <b>${fmt(p.total)}</b></span>
       <div class="row"><button class="btn btn-ghost" type="button" id="copiarDato2">Copiar ${p.pago==="Nequi"?"número":"llave"}</button><span class="copied" id="datoOk2" hidden>Copiado</span></div>
       <ol>
-        <li>Paga <b>${fmt(p.total)}</b> ${p.pago==="Nequi" ? "por Nequi" : "por Bre-B desde tu banco"}. En la descripción escribe <b>${p.codigo}</b>.</li>
+        <li>Paga <b>${fmt(p.total)}</b> ${p.pago==="Nequi" ? "por Nequi" : "por Bre-B desde tu banco"}.</li>
         <li>Envía el pantallazo del pago:</li>
       </ol>
       <a class="wa" href="https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(waTxt)}" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>
@@ -434,7 +432,7 @@ function render(){
       <div class="row"><button class="btn btn-ghost" type="button" id="copiarDato">Copiar ${p==="Nequi"?"número":"llave"}</button><span class="copied" id="datoOk" hidden>Copiado</span></div>
       <ol>
         <li>Abre ${p==="Nequi" ? "Nequi" : "la app de tu banco o billetera y entra a Bre-B"}.</li>
-        <li>Paga <b>${fmt(total)}</b> a ${p==="Nequi" ? "este número" : "esta llave"}. En la descripción escribe <b>${codigo}</b>.</li>
+        <li>Paga <b>${fmt(total)}</b> a ${p==="Nequi" ? "este número" : "esta llave"}.</li>
         <li>Confirma el pedido. Al final podrás enviar el pantallazo del pago por WhatsApp.</li>
       </ol>`;
     $("copiarDato").onclick = ()=>copiar(dato.replace(/\s/g,""), "datoOk");
