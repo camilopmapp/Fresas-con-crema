@@ -64,8 +64,8 @@ section{display:flex;flex-direction:column;gap:12px}
 .top:has(input:focus-visible){outline:3px solid var(--berry);outline-offset:2px}
 
 /* Escala de precios */
-.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-variant-numeric:tabular-nums}
-.rung{text-align:center;padding:8px 2px;border-radius:10px;font-size:12px;color:var(--muted);background:var(--bg);border:1px solid transparent;transition:all .15s}
+.ladder{display:grid;grid-template-columns:1.55fr repeat(4,1fr);gap:4px;font-variant-numeric:tabular-nums}
+.rung{text-align:center;padding:8px 2px;white-space:nowrap;border-radius:10px;font-size:12px;color:var(--muted);background:var(--bg);border:1px solid transparent;transition:all .15s}
 .rung b{display:block;font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--ink)}
 .rung.on{background:var(--berry);color:#fff;border-color:var(--berry)}
 .rung.on b{color:#fff}
@@ -251,7 +251,7 @@ $("domTxt").textContent = CONFIG.domicilio ? "+" + fmt(CONFIG.domicilio) : "valo
 $("tops").innerHTML = CONFIG.toppings.map((t,i)=>
   `<label class="top"><input type="checkbox" id="t${i}" value="${t}"><span class="dot"></span><span>${t}</span></label>`).join("");
 $("ladder").innerHTML = CONFIG.precios.map((p,i)=>
-  `<div class="rung" data-i="${i}">${i===4?"Super":i+" top."}<b>${(p/1000)}k</b></div>`).join("");
+  `<div class="rung" data-i="${i}">${i===0?"Tradicional":i===4?"Super":i+" top."}<b>${(p/1000)}k</b></div>`).join("");
 $("hora").innerHTML = CONFIG.horas.map(h=>`<option>${h}</option>`).join("");
 
 const PAGOS = [

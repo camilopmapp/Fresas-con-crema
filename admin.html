@@ -74,6 +74,11 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(
 .live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--leaf)}
 .range{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 #alertas[aria-pressed="true"]{background:var(--leaf);color:#fff}
+.btn-del{background:transparent;color:var(--muted);text-decoration:underline;padding-inline:6px!important;margin-left:auto}
+.btn-danger{background:var(--berry);color:#fff}
+.btn-danger:disabled{opacity:.4;cursor:not-allowed}
+.del{border:1.5px solid var(--berry);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--chip)}
+.del p{margin:0;font-size:14px}
 </style>
 </head>
 <body>
@@ -131,14 +136,14 @@ if(!firebaseConfig){ $("sinConfig").hidden = false; throw new Error("Sin configu
 const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;
 const { initializeApp } = await import(`${base}/firebase-app.js`);
 const { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } = await import(`${base}/firebase-auth.js`);
-const { getFirestore, collection, query, where, orderBy, onSnapshot, getDocs, doc, updateDoc, Timestamp } = await import(`${base}/firebase-firestore.js`);
+const { getFirestore, collection, query, where, orderBy, onSnapshot, getDocs, doc, updateDoc, deleteDoc, Timestamp } = await import(`${base}/firebase-firestore.js`);
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app), db = getFirestore(app);
 await setPersistence(auth, browserLocalPersistence).catch(()=>{});
 
 const ESTADOS = { nuevo:"Nuevo", pagado:"Pagado", entregado:"Entregado", cancelado:"Cancelado" };
-let filtro = "activos", pedidos = [], unsub = null, vistos = null;
+let filtro = "activos", pedidos = [], unsub = null, vistos = null, borrando = null, textoBorrar = "";
 
 $("chips").innerHTML = [["activos","Por atender"],["nuevo","Nuevos"],["pagado","Pagados"],["entregado","Entregados"],["cancelado","Cancelados"],["todos","Todos"]]
   .map(([v,l])=>`<button class="chip" type="button" data-f="${v}" aria-pressed="${v===filtro}">${l}</button>`).join("");
@@ -186,6 +191,11 @@ function escuchar(){
 }
 
 function pintar(){
+  const foco = document.activeElement && document.activeElement.id==="delTxt";
+  pintarLista();
+  if(foco){ const i = $("delTxt"); if(i){ i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }
+}
+function pintarLista(){
   const validos = pedidos.filter(p=>p.estado!=="cancelado");
   const vasos = validos.reduce((s,p)=>s+(p.items||[]).reduce((a,i)=>a+i.cant,0),0);
   $("sPed").textContent = validos.length;
@@ -217,7 +227,13 @@ function pintar(){
         ${cel?`<a class="btn btn-ghost" href="https://wa.me/57${esc(cel)}" target="_blank" rel="noopener">WhatsApp</a>`:""}
         ${p.estado!=="cancelado"&&p.estado!=="entregado"?`<button class="btn btn-line" data-id="${esc(p.id)}" data-e="cancelado" type="button">Cancelar</button>`:""}
         ${p.estado==="cancelado"||p.estado==="entregado"?`<button class="btn btn-line" data-id="${esc(p.id)}" data-e="nuevo" type="button">Reabrir</button>`:""}
+        ${borrando===p.id?"":`<button class="btn btn-del" data-del="${esc(p.id)}" type="button">Eliminar</button>`}
       </div>
+      ${borrando===p.id?`<div class="del" role="group" aria-label="Confirmar eliminación">
+        <p>¿Estás segura de que deseas eliminar el pedido <b>${esc(p.codigo)}</b> de <b>${esc(p.nombre)}</b>? Esta acción no se puede deshacer.</p>
+        <label class="f">Escribe <b>eliminar</b> para confirmar <input type="text" id="delTxt" autocomplete="off" autocapitalize="none" spellcheck="false" value="${esc(textoBorrar)}"></label>
+        <div class="acts"><button class="btn btn-danger" id="delOk" data-id="${esc(p.id)}" type="button" ${textoBorrar.trim().toLowerCase()==="eliminar"?"":"disabled"}>Eliminar definitivamente</button><button class="btn btn-line" id="delNo" type="button">No, volver</button></div>
+      </div>`:""}
     </article>`;
   }).join("");
 }
@@ -333,8 +349,25 @@ $("excel").onclick = async ()=>{
   finally{ btn.disabled = false; btn.textContent = "Descargar Excel"; }
 };
 
+$("list").addEventListener("input", e=>{
+  if(e.target.id!=="delTxt") return;
+  textoBorrar = e.target.value;
+  $("delOk").disabled = textoBorrar.trim().toLowerCase()!=="eliminar";
+});
+$("list").addEventListener("click", async e=>{
+  const d = e.target.closest("[data-del]");
+  if(d){ borrando = d.dataset.del; textoBorrar = ""; pintar(); setTimeout(()=>$("delTxt")?.focus(), 0); return; }
+  if(e.target.id==="delNo"){ borrando = null; textoBorrar = ""; pintar(); return; }
+  if(e.target.id==="delOk"){
+    const b = e.target; if(textoBorrar.trim().toLowerCase()!=="eliminar") return;
+    b.disabled = true; b.textContent = "Eliminando…";
+    try{ await deleteDoc(doc(db,"pedidos",b.dataset.id)); borrando = null; textoBorrar = ""; pintar(); }
+    catch(err){ console.error(err); b.disabled = false; b.textContent = "Eliminar definitivamente"; b.closest(".del").querySelector("p").textContent = "No se pudo eliminar. Revisa la conexión e intenta de nuevo."; }
+  }
+});
+
 $("list").onclick = async e=>{
-  const b = e.target.closest("button[data-id]"); if(!b) return;
+  const b = e.target.closest("button[data-id][data-e]"); if(!b) return;
   if(b.dataset.e==="cancelado" && b.dataset.confirm!=="1"){ b.dataset.confirm="1"; b.textContent="¿Seguro? Toca otra vez"; setTimeout(()=>{ if(b.isConnected){ b.dataset.confirm=""; b.textContent="Cancelar"; } },3000); return; }
   b.disabled = true;
   try{ await updateDoc(doc(db,"pedidos",b.dataset.id), { estado: b.dataset.e }); }
