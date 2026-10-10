@@ -311,9 +311,9 @@ $("agregar").onclick = ()=>{
   const b = $("agregar");
   b.textContent = "✓ Agregado"; b.classList.add("ok");
   clearTimeout(b._t); b._t = setTimeout(()=>{ b.textContent = "Agregar al pedido"; b.classList.remove("ok"); }, 1300);
-  const t = $("toast");
-  t.textContent = `${last.cant} × ${last.nombre} agregado · ${vasos} ${vasos===1?"vaso":"vasos"} en el pedido`;
-  t.classList.add("show"); clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove("show"), 2600);
+  const aviso = $("toast");
+  aviso.textContent = `${last.cant} × ${last.nombre} agregado · ${vasos} ${vasos===1?"vaso":"vasos"} en el pedido`;
+  aviso.classList.add("show"); clearTimeout(aviso._t); aviso._t = setTimeout(()=>aviso.classList.remove("show"), 2600);
 };
 
 function totales(){
