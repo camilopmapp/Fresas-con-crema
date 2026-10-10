@@ -79,6 +79,46 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(
 .btn-danger:disabled{opacity:.4;cursor:not-allowed}
 .del{border:1.5px solid var(--berry);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--chip)}
 .del p{margin:0;font-size:14px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--chip);border-radius:14px;padding:4px;gap:4px}
+.tab{font:inherit;font-weight:800;border:0;border-radius:10px;padding:10px;background:transparent;color:var(--berry-deep);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgb(0 0 0 / .08)}
+.tab:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
+.view{display:flex;flex-direction:column;gap:14px}
+.pnav{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pnav b{font-family:var(--font-display);font-weight:600;font-size:17px;text-align:center}
+.nav{padding:6px 14px;font-size:20px;line-height:1}
+.nav:disabled{opacity:.35}
+.hero{align-items:flex-start;gap:2px}
+.hero .lbl{font-size:13px;font-weight:700;color:var(--muted)}
+.hero b{font-family:var(--font-display);font-size:38px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.delta{font-size:13px;font-weight:700;color:var(--muted)}
+.delta.up{color:var(--leaf)} .delta.down{color:var(--berry)}
+.stat small{display:block;font-size:12px;font-weight:700;color:var(--muted);min-height:1em}
+.stat small.up{color:var(--leaf)} .stat small.down{color:var(--berry)}
+#vVentas .stats{grid-template-columns:repeat(3,1fr)}
+@media (max-width:460px){#vVentas .stats{grid-template-columns:repeat(2,1fr)}}
+.sh{font-family:var(--font-display);font-weight:600;font-size:17px;margin:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}}
+.grid2 .panel{min-width:0}
+.bars{display:flex;flex-direction:column;gap:8px}
+.brow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;font-size:14px}
+.brow .bl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brow .bv{font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
+.brow .bt{grid-column:1/-1;height:8px;border-radius:4px;background:var(--chip);overflow:hidden}
+.brow .bt i{display:block;height:100%;border-radius:4px;background:var(--berry)}
+.nodata{color:var(--muted);font-size:14px;margin:0}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .ax{fill:var(--muted);font:600 11px var(--font-body)}
+.chart .bar{fill:var(--berry)}
+.chart .hit{fill:transparent;cursor:pointer}
+.chart .hit:hover + .bar,.chart .bar.on{fill:var(--berry-deep)}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;font-weight:700;padding:6px 9px;border-radius:8px;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-6px;font-variant-numeric:tabular-nums}
+.cli{width:100%;border-collapse:collapse;font-size:14px}
+.cli td{padding:6px 0;border-bottom:1px dashed var(--line)}
+.cli td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 </style>
 </head>
 <body>
@@ -99,28 +139,72 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(
   </form>
 
   <main id="app" hidden style="display:flex;flex-direction:column;gap:14px">
-    <div class="top">
-      <div class="datebar"><input type="date" id="dia" aria-label="Día"><span class="live" id="live">En vivo</span></div>
-      <button class="btn btn-ghost" id="alertas" type="button" aria-pressed="false">🔔 Activar alertas</button>
+    <div class="tabs" role="tablist" aria-label="Secciones">
+      <button class="tab" role="tab" id="tabP" aria-selected="true" aria-controls="vPedidos" type="button">Pedidos</button>
+      <button class="tab" role="tab" id="tabV" aria-selected="false" aria-controls="vVentas" type="button">Ventas</button>
     </div>
-    <div class="stats">
-      <div class="stat"><span>Pedidos</span><b id="sPed">0</b></div>
-      <div class="stat"><span>Vasos</span><b id="sVas">0</b></div>
-      <div class="stat"><span>Vendido</span><b id="sVen">$0</b></div>
-      <div class="stat"><span>Por cobrar</span><b id="sCob">$0</b></div>
-    </div>
-    <p class="prep" id="prep"></p>
-    <div class="chips" role="group" aria-label="Filtrar por estado" id="chips"></div>
-    <div class="list" id="list"></div>
 
-    <section class="panel" aria-labelledby="expT">
-      <h2 id="expT" style="font-family:var(--font-display);font-weight:600;font-size:18px">Descargar Excel</h2>
-      <div class="range">
+    <section id="vPedidos" role="tabpanel" aria-labelledby="tabP" class="view">
+      <div class="top">
+        <div class="datebar"><input type="date" id="dia" aria-label="Día"><span class="live" id="live">En vivo</span></div>
+        <button class="btn btn-ghost" id="alertas" type="button" aria-pressed="false">🔔 Activar alertas</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><span>Pedidos</span><b id="sPed">0</b></div>
+        <div class="stat"><span>Vasos</span><b id="sVas">0</b></div>
+        <div class="stat"><span>Vendido</span><b id="sVen">$0</b></div>
+        <div class="stat"><span>Por cobrar</span><b id="sCob">$0</b></div>
+      </div>
+      <p class="prep" id="prep"></p>
+      <div class="chips" role="group" aria-label="Filtrar por estado" id="chips"></div>
+      <div class="list" id="list"></div>
+    </section>
+
+    <section id="vVentas" role="tabpanel" aria-labelledby="tabV" class="view" hidden>
+      <div class="chips" role="group" aria-label="Periodo" id="periodos"></div>
+      <div class="pnav">
+        <button class="btn btn-line nav" id="prev" type="button" aria-label="Periodo anterior">‹</button>
+        <b id="pLabel"></b>
+        <button class="btn btn-line nav" id="next" type="button" aria-label="Periodo siguiente">›</button>
+      </div>
+      <div class="range" id="custom" hidden>
         <label class="f">Desde <input type="date" id="desde"></label>
         <label class="f">Hasta <input type="date" id="hasta"></label>
       </div>
-      <button class="btn btn-primary" id="excel" type="button">Descargar Excel</button>
-      <p class="prep" id="expMsg">Incluye tres hojas: Pedidos, Detalle por vaso y Resumen.</p>
+      <p class="prep" id="vMsg" hidden></p>
+
+      <div class="hero panel">
+        <span class="lbl">Total vendido</span>
+        <b id="kTotal">$0</b>
+        <span class="delta" id="kDelta"></span>
+      </div>
+      <div class="stats">
+        <div class="stat"><span>Pedidos</span><b id="kPed">0</b><small id="kPedD"></small></div>
+        <div class="stat"><span>Vasos</span><b id="kVas">0</b><small id="kVasD"></small></div>
+        <div class="stat"><span>Ticket promedio</span><b id="kTic">$0</b><small id="kTicD"></small></div>
+        <div class="stat"><span>Cancelados</span><b id="kCan">0</b></div>
+        <div class="stat"><span>Cobrado</span><b id="kCob">$0</b></div>
+        <div class="stat"><span>Por cobrar</span><b id="kPor">$0</b></div>
+      </div>
+
+      <section class="panel">
+        <h2 class="sh" id="gTit">Ventas</h2>
+        <div class="chart" id="chart"></div>
+      </section>
+
+      <div class="grid2">
+        <section class="panel"><h2 class="sh">Por tipo de vaso</h2><div id="bTipo" class="bars"></div></section>
+        <section class="panel"><h2 class="sh">Toppings usados</h2><div id="bTop" class="bars"></div></section>
+        <section class="panel"><h2 class="sh">Forma de pago</h2><div id="bPago" class="bars"></div></section>
+        <section class="panel"><h2 class="sh">Entrega</h2><div id="bEnt" class="bars"></div></section>
+      </div>
+      <section class="panel"><h2 class="sh">Clientes que repiten</h2><div id="bCli"></div></section>
+
+      <section class="panel" aria-labelledby="expT">
+        <h2 id="expT" class="sh">Descargar Excel</h2>
+        <button class="btn btn-primary" id="excel" type="button">Descargar Excel de este periodo</button>
+        <p class="prep" id="expMsg">Incluye tres hojas: Pedidos, Detalle por vaso y Resumen.</p>
+      </section>
     </section>
   </main>
 </div>
@@ -270,7 +354,6 @@ $("alertas").onclick = async ()=>{
 };
 
 /* ===== Exportar a Excel ===== */
-$("desde").value = $("dia").value; $("hasta").value = $("dia").value;
 function cargarSheetJS(){
   if(window.XLSX) return Promise.resolve();
   return new Promise((res,rej)=>{
@@ -284,17 +367,195 @@ const f2 = n => String(n).padStart(2,"0");
 const fecha = d => `${d.getFullYear()}-${f2(d.getMonth()+1)}-${f2(d.getDate())}`;
 const horaTxt = d => `${f2(d.getHours())}:${f2(d.getMinutes())}`;
 
+/* ===== Ventas ===== */
+const DIAS = ["dom","lun","mar","mié","jue","vie","sáb"];
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const mesCorto = m => MESES[m].slice(0,3);
+const V = { modo:"semana", k:0, rango:null, actual:[], previo:[], token:0 };
+const inicioDia = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const sumar = (d,n) => new Date(d.getFullYear(), d.getMonth(), d.getDate()+n);
+const diasEntre = (a,b) => Math.round((inicioDia(b)-inicioDia(a))/864e5);
+
+function calcularRango(){
+  const h = inicioDia(new Date()), k = V.k;
+  if(V.modo==="hoy"){ const ini = sumar(h,k); return {ini, fin:sumar(ini,1)}; }
+  if(V.modo==="semana"){ const lun = sumar(h, -((h.getDay()+6)%7) + 7*k); return {ini:lun, fin:sumar(lun,7)}; }
+  if(V.modo==="mes"){ const ini = new Date(h.getFullYear(), h.getMonth()+k, 1); return {ini, fin:new Date(ini.getFullYear(), ini.getMonth()+1, 1)}; }
+  const a = $("desde").value, b = $("hasta").value;
+  if(!a || !b || a>b) return null;
+  const [y1,m1,d1] = a.split("-").map(Number), [y2,m2,d2] = b.split("-").map(Number);
+  return {ini:new Date(y1,m1-1,d1), fin:new Date(y2,m2-1,d2+1)};
+}
+function rangoPrevio(r){
+  if(V.modo==="mes") return {ini:new Date(r.ini.getFullYear(), r.ini.getMonth()-1, 1), fin:r.ini};
+  const n = diasEntre(r.ini, r.fin); return {ini:sumar(r.ini,-n), fin:r.ini};
+}
+function etiqueta(r){
+  const ult = sumar(r.fin,-1);
+  if(V.modo==="hoy") return (V.k===0?"Hoy · ":V.k===-1?"Ayer · ":"") + `${DIAS[r.ini.getDay()]} ${r.ini.getDate()} de ${MESES[r.ini.getMonth()]}`;
+  if(V.modo==="mes") return `${MESES[r.ini.getMonth()][0].toUpperCase()+MESES[r.ini.getMonth()].slice(1)} ${r.ini.getFullYear()}`;
+  const mismoMes = r.ini.getMonth()===ult.getMonth() && r.ini.getFullYear()===ult.getFullYear();
+  const izq = mismoMes ? `${r.ini.getDate()}` : `${r.ini.getDate()} ${mesCorto(r.ini.getMonth())}`;
+  return `${izq} – ${ult.getDate()} ${mismoMes?"de "+MESES[ult.getMonth()]:mesCorto(ult.getMonth())}${r.ini.getFullYear()!==ult.getFullYear()||V.modo==="custom"?" "+ult.getFullYear():""}`;
+}
+const vsTxt = () => ({hoy:"vs. día anterior", semana:"vs. semana anterior", mes:"vs. mes anterior", custom:"vs. periodo anterior"})[V.modo];
+
+async function leer(ini, fin){
+  const q = query(collection(db,"pedidos"), where("creado",">=",Timestamp.fromDate(ini)), where("creado","<",Timestamp.fromDate(fin)), orderBy("creado","asc"));
+  return (await getDocs(q)).docs.map(d=>({id:d.id, ...d.data()})).filter(p=>p.creado && p.creado.toDate);
+}
+const vasosDe = p => (p.items||[]).reduce((x,i)=>x+i.cant,0);
+function metricas(ps){
+  const v = ps.filter(p=>p.estado!=="cancelado");
+  const total = v.reduce((s,p)=>s+p.total,0);
+  return { v, total, pedidos:v.length, vasos:v.reduce((s,p)=>s+vasosDe(p),0), ticket: v.length ? Math.round(total/v.length) : 0,
+    cancelados: ps.length-v.length, cobrado: v.filter(p=>p.estado!=="nuevo").reduce((s,p)=>s+p.total,0), porCobrar: v.filter(p=>p.estado==="nuevo").reduce((s,p)=>s+p.total,0) };
+}
+function delta(el, cur, prev, corto){
+  el.classList.remove("up","down");
+  if(!prev){ el.textContent = corto ? "" : (cur ? `Sin ventas en el periodo anterior` : ""); return; }
+  const pct = Math.round((cur-prev)/prev*100);
+  el.textContent = `${pct>0?"+":""}${pct} %${corto?"":" "+vsTxt()}`;
+  if(pct>0) el.classList.add("up"); else if(pct<0) el.classList.add("down");
+}
+
+$("periodos").innerHTML = [["hoy","Hoy"],["semana","Semana"],["mes","Mes"],["custom","Personalizado"]]
+  .map(([v,l])=>`<button class="chip" type="button" data-p="${v}" aria-pressed="${v===V.modo}">${l}</button>`).join("");
+$("periodos").onclick = e=>{
+  const b = e.target.closest("[data-p]"); if(!b) return;
+  V.modo = b.dataset.p; V.k = 0;
+  document.querySelectorAll("#periodos .chip").forEach(c=>c.setAttribute("aria-pressed", c===b));
+  cargarVentas();
+};
+$("prev").onclick = ()=>{ V.k--; cargarVentas(); };
+$("next").onclick = ()=>{ if(V.k<0){ V.k++; cargarVentas(); } };
+{ const h = new Date(); $("desde").value = fecha(new Date(h.getFullYear(), h.getMonth(), 1)); $("hasta").value = fecha(h); }
+$("desde").onchange = $("hasta").onchange = ()=>cargarVentas();
+
+function mostrarTab(cual){
+  const v = cual==="ventas";
+  $("tabP").setAttribute("aria-selected", !v); $("tabV").setAttribute("aria-selected", v);
+  $("vPedidos").hidden = v; $("vVentas").hidden = !v;
+  if(v) cargarVentas();
+}
+$("tabP").onclick = ()=>mostrarTab("pedidos");
+$("tabV").onclick = ()=>mostrarTab("ventas");
+let rz; window.addEventListener("resize", ()=>{ clearTimeout(rz); rz = setTimeout(()=>{ if(!$("vVentas").hidden && V.rango) pintarVentas(); }, 200); });
+
+async function cargarVentas(){
+  const custom = V.modo==="custom";
+  $("custom").hidden = !custom; $("prev").hidden = custom; $("next").hidden = custom;
+  $("next").disabled = V.k>=0;
+  const r = calcularRango();
+  if(!r){ $("vMsg").hidden = false; $("vMsg").textContent = "Revisa las fechas: «Desde» debe ser anterior o igual a «Hasta»."; return; }
+  V.rango = r; $("pLabel").textContent = etiqueta(r);
+  const t = ++V.token, rp = rangoPrevio(r);
+  $("vMsg").hidden = false; $("vMsg").textContent = "Cargando…";
+  try{
+    const [a,b] = await Promise.all([leer(r.ini, r.fin), leer(rp.ini, rp.fin)]);
+    if(t!==V.token) return;
+    V.actual = a; V.previo = b;
+    $("vMsg").hidden = true;
+    pintarVentas();
+  }catch(err){ console.error(err); if(t===V.token) $("vMsg").textContent = "No se pudieron cargar las ventas. Revisa la conexión."; }
+}
+
+function barras(el, filas, fmtV){
+  if(!filas.length){ el.innerHTML = `<p class="nodata">Sin datos en este periodo.</p>`; return; }
+  const max = Math.max(...filas.map(f=>f[1]),1);
+  el.innerHTML = filas.map(([l,v,extra])=>`<div class="brow"><span class="bl">${esc(l)}</span><span class="bv">${fmtV(v)}${extra?` <span style="color:var(--muted);font-weight:600">· ${extra}</span>`:""}</span><span class="bt"><i style="width:${Math.max(2,v/max*100)}%"></i></span></div>`).join("");
+}
+
+function pintarVentas(){
+  const m = metricas(V.actual), mp = metricas(V.previo);
+  $("kTotal").textContent = fmt(m.total); delta($("kDelta"), m.total, mp.total);
+  $("kPed").textContent = m.pedidos; delta($("kPedD"), m.pedidos, mp.pedidos, true);
+  $("kVas").textContent = m.vasos; delta($("kVasD"), m.vasos, mp.vasos, true);
+  $("kTic").textContent = fmt(m.ticket); delta($("kTicD"), m.ticket, mp.ticket, true);
+  $("kCan").textContent = m.cancelados; $("kCob").textContent = fmt(m.cobrado); $("kPor").textContent = fmt(m.porCobrar);
+
+  const r = V.rango, dias = diasEntre(r.ini, r.fin);
+  const cubos = [], poner = (key, p) => { const c = cubos.find(c=>c.key===key); if(c){ c.v += p.total; c.n++; } };
+  if(V.modo==="hoy"){
+    const hs = m.v.map(p=>p.creado.toDate().getHours());
+    const h0 = Math.min(12, ...hs), h1 = Math.max(20, ...hs);
+    for(let h=h0; h<=h1; h++) cubos.push({lbl:`${h}h`, tip:`${h}:00 – ${h}:59`, v:0, n:0, key:h});
+    m.v.forEach(p=>poner(p.creado.toDate().getHours(), p));
+    $("gTit").textContent = "Ventas por hora";
+  } else if(dias<=62){
+    for(let i=0;i<dias;i++){ const d = sumar(r.ini,i); cubos.push({lbl: dias<=7 ? `${DIAS[d.getDay()]} ${d.getDate()}` : `${d.getDate()}`, tip:`${DIAS[d.getDay()]} ${d.getDate()} ${mesCorto(d.getMonth())}`, v:0, n:0, key:fecha(d)}); }
+    m.v.forEach(p=>poner(fecha(p.creado.toDate()), p));
+    $("gTit").textContent = "Ventas por día";
+  } else {
+    for(let d = new Date(r.ini.getFullYear(), r.ini.getMonth(), 1); d < r.fin; d = new Date(d.getFullYear(), d.getMonth()+1, 1))
+      cubos.push({lbl:mesCorto(d.getMonth()), tip:`${MESES[d.getMonth()]} ${d.getFullYear()}`, v:0, n:0, key:`${d.getFullYear()}-${d.getMonth()}`});
+    m.v.forEach(p=>{ const d = p.creado.toDate(); poner(`${d.getFullYear()}-${d.getMonth()}`, p); });
+    $("gTit").textContent = "Ventas por mes";
+  }
+  grafico(cubos);
+
+  const tipos = {}; m.v.forEach(p=>p.items.forEach(i=>{ const o = tipos[i.nombre] ||= [0,0]; o[0]+=i.cant; o[1]+=i.unit*i.cant; }));
+  const orden = ["Tradicional","+1 topping","+2 toppings","+3 toppings","Super"];
+  barras($("bTipo"), Object.entries(tipos).sort((a,b)=>orden.indexOf(a[0])-orden.indexOf(b[0])).map(([k,[n,t]])=>[k,n,fmt(t)]), n=>`${n} ${n===1?"vaso":"vasos"}`);
+  const tops = {}; m.v.forEach(p=>p.items.forEach(i=>i.toppings.forEach(t=>tops[t]=(tops[t]||0)+i.cant)));
+  barras($("bTop"), Object.entries(tops).sort((a,b)=>b[1]-a[1]).map(([k,n])=>[k,n]), n=>`${n} ${n===1?"porción":"porciones"}`);
+  const pagos = {}; m.v.forEach(p=>{ const o = pagos[p.pago] ||= [0,0]; o[0]+=p.total; o[1]++; });
+  barras($("bPago"), Object.entries(pagos).sort((a,b)=>b[1][0]-a[1][0]).map(([k,[t,n]])=>[k,t,`${n} ${n===1?"pedido":"pedidos"}`]), fmt);
+  const dom = m.v.filter(p=>p.entrega==="Domicilio"), rec = m.v.filter(p=>p.entrega!=="Domicilio");
+  barras($("bEnt"), [["Domicilio",dom.length,`${fmt(dom.reduce((s,p)=>s+p.domicilio,0))} en domicilios`],["Recoge",rec.length]].filter(f=>f[1]>0), n=>`${n} ${n===1?"pedido":"pedidos"}`);
+
+  const cli = {};
+  m.v.forEach(p=>{ const k = p.celular||p.nombre; const o = cli[k] ||= {nombre:p.nombre, cel:p.celular, n:0, t:0}; o.n++; o.t+=p.total; o.nombre = p.nombre; });
+  const rep = Object.values(cli).filter(c=>c.n>=2).sort((a,b)=>b.n-a.n||b.t-a.t).slice(0,10);
+  $("bCli").innerHTML = rep.length
+    ? `<table class="cli"><tbody>${rep.map(c=>`<tr><td><b>${esc(c.nombre)}</b><br><span style="color:var(--muted)">${esc(c.cel)}</span></td><td>${c.n} pedidos<br>${fmt(c.t)}</td></tr>`).join("")}</tbody></table>`
+    : `<p class="nodata">Ningún cliente hizo más de un pedido en este periodo.</p>`;
+}
+
+function grafico(cubos){
+  const W = Math.max(300, Math.round($("chart").clientWidth || 600)), H = W<480 ? 200 : 230, L = 46, R = 6, T = 12, B = 28, iw = W-L-R, ih = H-T-B;
+  const maxV = Math.max(...cubos.map(c=>c.v), 0);
+  const pasos = [5000,10000,20000,25000,50000,100000,200000,250000,500000,1e6,2e6,2.5e6,5e6,1e7];
+  const paso = pasos.find(s=>s*4>=maxV) || Math.ceil(maxV/4/1e7)*1e7;
+  const top = paso*4, y = v => T + ih - v/top*ih;
+  const n = cubos.length, slot = iw/n, bw = Math.max(3, Math.min(48, slot-Math.max(2, slot*.28)));
+  const cada = n<=7 ? 1 : Math.ceil(n/Math.max(4, Math.floor(iw/44)));
+  const k = v => v>=1e6 ? `$${(v/1e6).toLocaleString("es-CO")} M` : `$${Math.round(v/1000)}k`;
+  let g = "";
+  for(let i=0;i<=4;i++){ const v = paso*i, yy = y(v); g += `<line class="gl" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="ax" x="${L-6}" y="${yy+4}" text-anchor="end">${k(v)}</text>`; }
+  cubos.forEach((c,i)=>{
+    const x = L + slot*i + (slot-bw)/2, cx = L + slot*i + slot/2;
+    const h = c.v/top*ih, yy = T+ih-h, rr = Math.min(4, bw/2, h);
+    g += `<rect class="hit" data-i="${i}" x="${L+slot*i}" y="${T}" width="${slot}" height="${ih+B}"/>`;
+    if(h>0) g += `<path class="bar" data-b="${i}" d="M${x},${T+ih} V${yy+rr} Q${x},${yy} ${x+rr},${yy} H${x+bw-rr} Q${x+bw},${yy} ${x+bw},${yy+rr} V${T+ih} Z"/>`;
+    if(i%cada===0) g += `<text class="ax" x="${cx}" y="${H-8}" text-anchor="middle">${esc(c.lbl)}</text>`;
+  });
+  const total = cubos.reduce((s,c)=>s+c.v,0);
+  $("chart").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc($("gTit").textContent)}: total ${fmt(total)}">${g}</svg><div class="tip" hidden></div>`;
+  const svg = $("chart").querySelector("svg"), tip = $("chart").querySelector(".tip");
+  const limpiar = ()=>svg.querySelectorAll(".bar.on").forEach(b=>b.classList.remove("on"));
+  const mostrar = e=>{
+    const hit = e.target.closest(".hit"); if(!hit){ tip.hidden = true; limpiar(); return; }
+    const i = +hit.dataset.i, c = cubos[i];
+    limpiar(); svg.querySelector(`[data-b="${i}"]`)?.classList.add("on");
+    const sx = svg.clientWidth/W;
+    tip.innerHTML = `${esc(c.tip)}<br>${fmt(c.v)} · ${c.n} ${c.n===1?"pedido":"pedidos"}`;
+    const px = (L+slot*i+slot/2)*sx, mitad = tip.offsetWidth/2 || 60;
+    tip.style.left = `${Math.min(Math.max(px, mitad), svg.clientWidth-mitad)}px`; tip.style.top = `${y(c.v)*sx}px`; tip.hidden = false;
+  };
+  svg.addEventListener("pointermove", mostrar); svg.addEventListener("pointerdown", mostrar);
+  svg.addEventListener("pointerleave", ()=>{ tip.hidden = true; limpiar(); });
+}
+
 $("excel").onclick = async ()=>{
   const btn = $("excel"), msg = $("expMsg");
-  const [a,b] = [$("desde").value, $("hasta").value];
-  if(!a || !b || a>b){ msg.textContent = "Revisa las fechas: «Desde» debe ser anterior o igual a «Hasta»."; return; }
+  if(!V.rango){ msg.textContent = "Elige primero un periodo válido."; return; }
+  const a = fecha(V.rango.ini), b = fecha(sumar(V.rango.fin,-1));
   btn.disabled = true; btn.textContent = "Preparando…";
   try{
     await cargarSheetJS();
-    const [y1,m1,d1] = a.split("-").map(Number), [y2,m2,d2] = b.split("-").map(Number);
-    const q = query(collection(db,"pedidos"), where("creado",">=",Timestamp.fromDate(new Date(y1,m1-1,d1))), where("creado","<",Timestamp.fromDate(new Date(y2,m2-1,d2+1))), orderBy("creado","asc"));
-    const ps = (await getDocs(q)).docs.map(d=>({id:d.id,...d.data()}));
-    if(!ps.length){ msg.textContent = "No hay pedidos en ese rango de fechas."; return; }
+    const ps = await leer(V.rango.ini, V.rango.fin);
+    if(!ps.length){ msg.textContent = "No hay pedidos en este periodo."; return; }
 
     const filasP = [], filasD = [];
     ps.forEach(p=>{
@@ -346,7 +607,7 @@ $("excel").onclick = async ()=>{
     XLSX.writeFile(wb, `pedidos-fresas_${a}${a!==b?"_a_"+b:""}.xlsx`);
     msg.textContent = `Listo: ${ps.length} ${ps.length===1?"pedido":"pedidos"} exportados.`;
   }catch(err){ console.error(err); msg.textContent = "No se pudo generar el Excel. Revisa la conexión e intenta de nuevo."; }
-  finally{ btn.disabled = false; btn.textContent = "Descargar Excel"; }
+  finally{ btn.disabled = false; btn.textContent = "Descargar Excel de este periodo"; }
 };
 
 $("list").addEventListener("input", e=>{
