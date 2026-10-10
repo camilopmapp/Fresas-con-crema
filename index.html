@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#B4232B">
+<meta property="og:title" content="Fresas con Crema · Pedidos">
+<meta property="og:description" content="Arma tu vaso, elige toppings y pide por WhatsApp.">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+<title>Fresas con Crema · Pedidos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&family=Yellowtail&display=swap">
+<style>
+/* Layout: una sola columna tipo app móvil — armador del vaso, pedido, datos, pago; barra fija con total y botón de WhatsApp */
+:root{
+  --bg:#FBF6F2; --surface:#FFFFFF; --ink:#3A1414; --muted:#7D5C58;
+  --berry:#B4232B; --berry-deep:#7E1A1F; --leaf:#2F7A3B; --line:#EEDFD9; --chip:#FCEDEB;
+  --font-script:"Yellowtail", "Brush Script MT", cursive;
+  --font-display:"Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --font-body:"Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1C1112; --surface:#271718; --ink:#F6E9E6; --muted:#C2A29D;
+  --berry:#F0626A; --berry-deep:#FF8F95; --leaf:#7BC788; --line:#3D2627; --chip:#3A2023; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1C1112; --surface:#271718; --ink:#F6E9E6; --muted:#C2A29D;
+  --berry:#F0626A; --berry-deep:#FF8F95; --leaf:#7BC788; --line:#3D2627; --chip:#3A2023; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.45;position:relative;isolation:isolate}
+:root{--pat:.17;--glow:#F9DCD8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--pat:.09;--glow:#3A1A1D}}
+:root[data-theme="dark"]{--pat:.09;--glow:#3A1A1D}
+/* Fresitas dispersas y un brillo suave arriba; las tarjetas son opacas, así el patrón solo asoma en los márgenes */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:var(--pat);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'%3E%3Cdefs%3E%3Cg id='s'%3E%3Cpath d='M0 -10c-9 0-15 5-15 13 0 11 8 20 15 25 7-5 15-14 15-25 0-8-6-13-15-13z' fill='%23C8252E'/%3E%3Cpath d='M0 -12l-4-6 2 6-8-3 6 5-7 2 8 1 3-1zM0 -12l4-6-2 6 8-3-6 5 7 2-8 1-3-1z' fill='%232F7A3B'/%3E%3Cg fill='%23FFE9A8'%3E%3Ccircle cx='-6' cy='2' r='1.2'/%3E%3Ccircle cx='5' cy='0' r='1.2'/%3E%3Ccircle cx='0' cy='8' r='1.2'/%3E%3Ccircle cx='-4' cy='14' r='1.2'/%3E%3Ccircle cx='6' cy='12' r='1.2'/%3E%3Ccircle cx='1' cy='19' r='1.2'/%3E%3C/g%3E%3C/g%3E%3C/defs%3E%3Cuse href='%23s' transform='translate(40 50) rotate(-18)'/%3E%3Cuse href='%23s' transform='translate(190 110) rotate(22) scale(.75)'/%3E%3Cuse href='%23s' transform='translate(95 205) rotate(8) scale(.6)'/%3E%3C/svg%3E");
+  background-size:260px 260px}
+body::after{content:"";position:fixed;inset:0 0 auto 0;height:340px;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 70% 100% at 50% 0%, var(--glow), transparent 70%)}
+.wrap{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:20px 140px;display:flex;flex-direction:column;gap:22px}
+h1,h2{margin:0;text-wrap:balance}
+header{text-align:center;display:flex;flex-direction:column;gap:2px;padding-block:6px}
+.eyebrow{font-family:var(--font-display);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:13px;color:var(--berry-deep)}
+.script{font-family:var(--font-script);font-size:62px;line-height:.9;color:var(--berry);font-weight:400}
+.date{font-family:var(--font-display);font-weight:500;color:var(--muted);font-size:15px;margin-top:6px}
+h2{font-family:var(--font-display);font-weight:600;font-size:20px;display:flex;align-items:baseline;gap:8px}
+h2 .step{font-size:13px;color:var(--muted);font-weight:500;letter-spacing:.06em;text-transform:uppercase}
+section{display:flex;flex-direction:column;gap:12px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px}
+
+/* Toppings */
+.tops{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.top{position:relative;display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid var(--line);border-radius:14px;background:var(--bg);cursor:pointer;font-weight:600;min-width:0;user-select:none}
+.top input{position:absolute;opacity:0;pointer-events:none}
+.top .dot{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;transition:all .15s}
+.top:has(input:checked){border-color:var(--berry);background:var(--chip)}
+.top:has(input:checked) .dot{background:var(--berry);border-color:var(--berry)}
+.top:has(input:checked) .dot::after{content:"";width:8px;height:5px;border:2.5px solid #fff;border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+.top:has(input:focus-visible){outline:3px solid var(--berry);outline-offset:2px}
+
+/* Escala de precios */
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-variant-numeric:tabular-nums}
+.rung{text-align:center;padding:8px 2px;border-radius:10px;font-size:12px;color:var(--muted);background:var(--bg);border:1px solid transparent;transition:all .15s}
+.rung b{display:block;font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--ink)}
+.rung.on{background:var(--berry);color:#fff;border-color:var(--berry)}
+.rung.on b{color:#fff}
+
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.qty{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:999px;overflow:hidden}
+.qty button{width:42px;height:42px;border:0;background:transparent;color:var(--ink);font-size:22px;cursor:pointer}
+.qty output{min-width:34px;text-align:center;font-family:var(--font-display);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.subtotal{font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--berry-deep);font-variant-numeric:tabular-nums}
+.btn{font:inherit;font-weight:700;border:0;border-radius:14px;padding:14px 18px;cursor:pointer;transition:transform .1s, filter .15s}
+.btn:active{transform:scale(.98)}
+.btn:focus-visible,.qty button:focus-visible,.seg label:has(input:focus-visible),input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
+.btn-primary{background:var(--berry);color:#fff;width:100%}
+.btn-ghost{background:var(--chip);color:var(--berry-deep)}
+
+/* Pedido */
+.cart{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.cart li{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px dashed var(--line)}
+.cart li:last-child{border-bottom:0}
+.cart .n{font-family:var(--font-display);font-weight:600;color:var(--berry);font-variant-numeric:tabular-nums}
+.cart .d{min-width:0}
+.cart .d strong{display:block}
+.cart .d small{color:var(--muted)}
+.cart .p{font-variant-numeric:tabular-nums;font-weight:700}
+.cart .x{border:0;background:transparent;color:var(--muted);font-size:20px;width:32px;height:32px;border-radius:50%;cursor:pointer}
+.cart .x:hover{background:var(--chip);color:var(--berry)}
+.empty{color:var(--muted);text-align:center;padding:14px 8px;border:1.5px dashed var(--line);border-radius:14px}
+
+/* Formulario */
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
+label.f span.opt{font-weight:400;color:var(--muted)}
+input[type=text],input[type=tel],textarea,select{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:12px;width:100%}
+textarea{min-height:70px;resize:vertical}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px}
+.seg label{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;padding:11px 6px;border:1.5px solid var(--line);border-radius:12px;cursor:pointer;font-weight:700;background:var(--bg)}
+.seg label small{font-weight:400;color:var(--muted);font-size:12px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){border-color:var(--berry);background:var(--chip);color:var(--berry-deep)}
+.err{color:var(--berry);font-size:13px;font-weight:600}
+
+/* Pago */
+.pay{border:1.5px solid var(--leaf);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.pay .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.pay .v{font-family:var(--font-display);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;word-break:break-all;user-select:all}
+.pay .holder{color:var(--muted);font-size:14px}
+.pay ol{margin:0;padding-left:20px;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.copied{color:var(--leaf);font-weight:700;font-size:13px}
+
+/* Barra inferior */
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 24px rgb(0 0 0 / .06)}
+.bar-in{max-width:520px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.bar .tot{display:flex;flex-direction:column;line-height:1.1}
+.bar .tot small{color:var(--muted);font-size:12px}
+.bar .tot b{font-family:var(--font-display);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.wa{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#1F8F4E;color:#fff;border-radius:14px;padding:14px;font-weight:800}
+.wa[aria-disabled="true"]{opacity:.45;pointer-events:none}
+.preview{font-family:ui-monospace,Menlo,monospace;font-size:13px;white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;max-height:240px;overflow:auto}
+details summary{cursor:pointer;color:var(--muted);font-weight:600;font-size:14px}
+footer{text-align:center;color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Fresas con</span>
+    <h1 class="script">Crema</h1>
+    <span class="date" id="fecha"></span>
+  </header>
+
+  <section aria-labelledby="h1s">
+    <h2 id="h1s"><span class="step">Paso 1</span> Arma tu vaso</h2>
+    <div class="panel">
+      <p style="margin:0;color:var(--muted);font-size:14px">Todos llevan crema, fresas y chantilly. Elige tus toppings:</p>
+      <div class="tops" id="tops"></div>
+      <div class="ladder" id="ladder" aria-label="Precio según número de toppings"></div>
+      <div class="row">
+        <div class="qty" role="group" aria-label="Cantidad">
+          <button type="button" id="menos" aria-label="Quitar uno">−</button>
+          <output id="cant">1</output>
+          <button type="button" id="mas" aria-label="Agregar uno">+</button>
+        </div>
+        <span class="subtotal" id="sub">$10.000</span>
+      </div>
+      <button class="btn btn-primary" id="agregar" type="button">Agregar al pedido</button>
+    </div>
+  </section>
+
+  <section aria-labelledby="h2s">
+    <h2 id="h2s"><span class="step">Paso 2</span> Tu pedido</h2>
+    <div class="panel">
+      <ul class="cart" id="cart"></ul>
+      <p class="empty" id="vacio">Aún no hay vasos. Arma uno arriba y toca <b>Agregar al pedido</b>.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h3s">
+    <h2 id="h3s"><span class="step">Paso 3</span> Tus datos</h2>
+    <form class="panel" id="datos" novalidate>
+      <label class="f">Nombre <input type="text" id="nombre" autocomplete="name" placeholder="¿A nombre de quién?"></label>
+      <label class="f">Celular <input type="tel" id="cel" autocomplete="tel" inputmode="numeric" placeholder="300 123 4567"></label>
+      <div class="f" style="display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px">Entrega
+        <div class="seg" role="radiogroup" aria-label="Tipo de entrega">
+          <label><input type="radio" name="entrega" value="Domicilio" checked>Domicilio<small id="domTxt"></small></label>
+          <label><input type="radio" name="entrega" value="Recoger">Recoger</label>
+        </div>
+      </div>
+      <div id="dirBox" style="display:flex;flex-direction:column;gap:14px">
+        <label class="f">Dirección <input type="text" id="dir" autocomplete="street-address" placeholder="Calle 5 # 10-20, apto 201"></label>
+        <label class="f">Barrio <input type="text" id="barrio" placeholder="Barrio"></label>
+      </div>
+      <label class="f">Hora aproximada <select id="hora"></select></label>
+      <label class="f">Notas <span class="opt">(opcional)</span><textarea id="notas" placeholder="Ej.: poquito arequipe, sin chantilly…"></textarea></label>
+    </form>
+  </section>
+
+  <section aria-labelledby="h4s">
+    <h2 id="h4s"><span class="step">Paso 4</span> Forma de pago</h2>
+    <div class="panel">
+      <div class="seg" role="radiogroup" aria-label="Forma de pago" id="pagos"></div>
+      <div class="pay" id="payBox" hidden></div>
+      <details>
+        <summary>Ver el mensaje que se enviará</summary>
+        <div class="preview" id="preview"></div>
+        <div class="row" style="margin-top:8px"><button class="btn btn-ghost" type="button" id="copiarMsg">Copiar mensaje</button><span class="copied" id="msgOk" hidden>Copiado</span></div>
+      </details>
+      <p class="err" id="err" hidden></p>
+    </div>
+  </section>
+
+  <footer>Pedidos al <span style="user-select:all" id="telTxt"></span> · Dulzura en cada bocado</footer>
+</div>
+
+<div class="bar">
+  <div class="bar-in">
+    <div class="tot"><small id="totLbl">Total</small><b id="total">$0</b></div>
+    <a class="wa" id="enviar" href="#" target="_blank" rel="noopener" aria-disabled="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.2c0-.1-.2-.2-.4-.3Z"/></svg>
+      Enviar pedido por WhatsApp
+    </a>
+  </div>
+</div>
+
+<script>
+/* ===== CONFIGURACIÓN: cambie aquí sus datos ===== */
+const CONFIG = {
+  whatsapp: "573188785621",            // 57 + celular, sin espacios
+  telefonoVisible: "(318) 878-5621",
+  fechaVenta: "Sábado 10 de octubre",
+  precios: [10000, 12000, 14000, 15000, 16000], // 0,1,2,3,4 toppings
+  toppings: ["Arequipe", "Queso", "Sirope de chocolate", "M&M's"],
+  domicilio: 2000,                    // 0 = "valor a convenir"
+  horas: ["Lo antes posible","2:00 p. m.","3:00 p. m.","4:00 p. m.","5:00 p. m.","6:00 p. m."],
+  titular: "Paula Sofía Pabón Chavez", // nombre que verá el cliente al pagar
+  nequi: "318 878 5621",
+  llaveBreB: "3188785621",            // su llave Bre-B (celular, cédula, correo o alfanumérica)
+};
+/* ================================================= */
+
+const fmt = n => "$" + n.toLocaleString("es-CO");
+const $ = id => document.getElementById(id);
+const nombres = ["Tradicional","+1 topping","+2 toppings","+3 toppings","Super"];
+let cant = 1, cart = [];
+const codigo = "FC-" + Math.random().toString(36).slice(2,6).toUpperCase();
+
+$("fecha").textContent = CONFIG.fechaVenta;
+$("telTxt").textContent = CONFIG.telefonoVisible;
+$("domTxt").textContent = CONFIG.domicilio ? "+" + fmt(CONFIG.domicilio) : "valor a convenir";
+
+$("tops").innerHTML = CONFIG.toppings.map((t,i)=>
+  `<label class="top"><input type="checkbox" id="t${i}" value="${t}"><span class="dot"></span><span>${t}</span></label>`).join("");
+$("ladder").innerHTML = CONFIG.precios.map((p,i)=>
+  `<div class="rung" data-i="${i}">${i===4?"Super":i+" top."}<b>${(p/1000)}k</b></div>`).join("");
+$("hora").innerHTML = CONFIG.horas.map(h=>`<option>${h}</option>`).join("");
+
+const PAGOS = [
+  {v:"Efectivo", s:"al recibir"},
+  {v:"Nequi", s:"transferencia"},
+  {v:"Bre-B", s:"desde cualquier banco"},
+];
+$("pagos").innerHTML = PAGOS.map((p,i)=>
+  `<label><input type="radio" name="pago" value="${p.v}" ${i===0?"checked":""}>${p.v}<small>${p.s}</small></label>`).join("");
+
+const elegidos = () => [...document.querySelectorAll("#tops input:checked")].map(x=>x.value);
+function refreshBuilder(){
+  const n = elegidos().length;
+  document.querySelectorAll(".rung").forEach(r=>r.classList.toggle("on", +r.dataset.i===n));
+  $("cant").textContent = cant;
+  $("sub").textContent = fmt(CONFIG.precios[n]*cant);
+}
+$("tops").addEventListener("change", refreshBuilder);
+$("menos").onclick = ()=>{ if(cant>1){cant--;refreshBuilder();} };
+$("mas").onclick = ()=>{ if(cant<20){cant++;refreshBuilder();} };
+
+$("agregar").onclick = ()=>{
+  const t = elegidos(), n = t.length;
+  cart.push({cant, toppings:t, nombre:nombres[n], unit:CONFIG.precios[n]});
+  document.querySelectorAll("#tops input").forEach(x=>x.checked=false);
+  cant = 1; refreshBuilder(); render();
+  $("h2s").scrollIntoView({behavior:"smooth", block:"start"});
+};
+
+function totales(){
+  const sub = cart.reduce((s,i)=>s+i.unit*i.cant,0);
+  const dom = entrega()==="Domicilio" ? CONFIG.domicilio : 0;
+  return {sub, dom, total: sub+dom};
+}
+const entrega = ()=>document.querySelector('input[name=entrega]:checked').value;
+const pago = ()=>document.querySelector('input[name=pago]:checked').value;
+
+function mensaje(){
+  const {sub,dom,total} = totales();
+  const L = [];
+  L.push(`*Pedido Fresas con Crema* (${codigo})`);
+  L.push(CONFIG.fechaVenta, "");
+  cart.forEach((i,k)=>{
+    const det = i.toppings.length ? i.toppings.join(", ") : "sin toppings";
+    L.push(`${k+1}. ${i.cant} × ${i.nombre} (${det}) — ${fmt(i.unit*i.cant)}`);
+  });
+  L.push("");
+  if(entrega()==="Domicilio"){
+    L.push(`Subtotal: ${fmt(sub)}`);
+    L.push(`Domicilio: ${CONFIG.domicilio ? fmt(dom) : "a convenir"}`);
+  }
+  L.push(`*Total: ${fmt(total)}*${entrega()==="Domicilio" && !CONFIG.domicilio ? " + domicilio" : ""}`, "");
+  L.push(`Nombre: ${$("nombre").value.trim()}`);
+  L.push(`Celular: ${$("cel").value.trim()}`);
+  L.push(`Entrega: ${entrega()}`);
+  if(entrega()==="Domicilio") L.push(`Dirección: ${$("dir").value.trim()}, barrio ${$("barrio").value.trim()}`);
+  L.push(`Hora: ${$("hora").value}`);
+  L.push(`Pago: ${pago()}${pago()!=="Efectivo" ? " (envío el comprobante en este chat)" : ""}`);
+  if($("notas").value.trim()) L.push(`Notas: ${$("notas").value.trim()}`);
+  return L.join("\n");
+}
+
+function faltantes(){
+  const f = [];
+  if(!cart.length) f.push("agrega al menos un vaso");
+  if(!$("nombre").value.trim()) f.push("tu nombre");
+  if($("cel").value.replace(/\D/g,"").length < 10) f.push("un celular de 10 dígitos");
+  if(entrega()==="Domicilio" && !$("dir").value.trim()) f.push("la dirección");
+  return f;
+}
+
+function render(){
+  $("cart").innerHTML = cart.map((i,k)=>`<li>
+    <span class="n">${i.cant}×</span>
+    <span class="d"><strong>${i.nombre}</strong><small>${i.toppings.length ? i.toppings.join(", ") : "Crema, fresas y chantilly"}</small></span>
+    <span class="p">${fmt(i.unit*i.cant)}</span>
+    <button class="x" type="button" data-k="${k}" aria-label="Quitar">×</button></li>`).join("");
+  $("vacio").hidden = cart.length>0;
+  $("dirBox").hidden = entrega()!=="Domicilio";
+  const {total} = totales();
+  $("total").textContent = fmt(total);
+  $("totLbl").textContent = entrega()==="Domicilio" && !CONFIG.domicilio && cart.length ? "Total + domicilio" : "Total";
+
+  const p = pago(), box = $("payBox");
+  if(p==="Efectivo"){ box.hidden = true; }
+  else{
+    const dato = p==="Nequi" ? CONFIG.nequi : CONFIG.llaveBreB;
+    box.hidden = false;
+    box.innerHTML = `
+      <span class="k">${p==="Nequi" ? "Número Nequi" : "Llave Bre-B"}</span>
+      <span class="v" id="dato">${dato}</span>
+      <span class="holder">Titular: ${CONFIG.titular} · Valor: <b>${fmt(total)}</b>${entrega()==="Domicilio" && !CONFIG.domicilio ? " + domicilio" : ""}</span>
+      <div class="row"><button class="btn btn-ghost" type="button" id="copiarDato">Copiar ${p==="Nequi"?"número":"llave"}</button><span class="copied" id="datoOk" hidden>Copiado</span></div>
+      <ol>
+        <li>Abre ${p==="Nequi" ? "Nequi" : "la app de tu banco o billetera y entra a Bre-B"}.</li>
+        <li>Paga <b>${fmt(total)}</b> a ${p==="Nequi" ? "este número" : "esta llave"}. En la descripción escribe <b>${codigo}</b>.</li>
+        <li>Envía el pedido y luego el pantallazo del pago en el mismo chat.</li>
+      </ol>`;
+    $("copiarDato").onclick = ()=>copiar(dato.replace(/\s/g,""), "datoOk");
+  }
+
+  $("preview").textContent = mensaje();
+  const f = faltantes(), a = $("enviar");
+  if(f.length){
+    a.setAttribute("aria-disabled","true"); a.href = "#";
+    $("err").hidden = false; $("err").textContent = "Para enviar falta: " + f.join(", ") + ".";
+  } else {
+    a.setAttribute("aria-disabled","false");
+    a.href = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(mensaje())}`;
+    $("err").hidden = true;
+  }
+  guardar();
+}
+
+function copiar(txt, okId){
+  const ok = ()=>{ $(okId).hidden=false; setTimeout(()=>$(okId).hidden=true,1800); };
+  try{ navigator.clipboard.writeText(txt).then(ok).catch(()=>{}); }catch(e){}
+}
+$("copiarMsg").onclick = ()=>copiar(mensaje(),"msgOk");
+
+$("cart").addEventListener("click", e=>{
+  const b = e.target.closest(".x"); if(!b) return;
+  cart.splice(+b.dataset.k,1); render();
+});
+document.addEventListener("input", e=>{ if(!e.target.closest("#tops")) render(); });
+document.addEventListener("change", e=>{ if(!e.target.closest("#tops")) render(); });
+
+/* Recordar datos del cliente en su propio celular */
+const CAMPOS = ["nombre","cel","dir","barrio"];
+function guardar(){ try{ localStorage.setItem("fc-cliente", JSON.stringify(Object.fromEntries(CAMPOS.map(c=>[c,$(c).value])))); }catch(e){} }
+try{ const d = JSON.parse(localStorage.getItem("fc-cliente")||"{}"); CAMPOS.forEach(c=>{ if(d[c]) $(c).value=d[c]; }); }catch(e){}
+
+refreshBuilder(); render();
+</script>
+</body>
+</html>
