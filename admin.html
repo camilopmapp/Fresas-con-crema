@@ -108,7 +108,7 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(
 </div>
 
 <script type="module">
-import { firebaseConfig, ADMIN_UID, FIREBASE_VERSION } from "./firebase-config.js";
+import { firebaseConfig, ADMIN_UIDS, FIREBASE_VERSION } from "./firebase-config.js";
 const $ = id => document.getElementById(id);
 const fmt = n => "$" + (n||0).toLocaleString("es-CO");
 const esc = s => String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -149,7 +149,7 @@ $("login").onsubmit = async e=>{
 $("salir").onclick = ()=>signOut(auth);
 
 onAuthStateChanged(auth, user=>{
-  const ok = user && (!ADMIN_UID || user.uid===ADMIN_UID);
+  const ok = user && ADMIN_UIDS.includes(user.uid);
   $("login").hidden = !!ok; $("app").hidden = !ok; $("salir").hidden = !user;
   if(user && !ok){ $("loginErr").textContent = "Esta cuenta no tiene acceso a los pedidos."; $("loginErr").hidden = false; signOut(auth); }
   if(ok) escuchar(); else if(unsub){ unsub(); unsub = null; }

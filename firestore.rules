@@ -4,7 +4,10 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function esAdmin() {
-      return request.auth != null && request.auth.uid == "1cWBOeSjxth6DGMUk8UhxcKWGuJ3";
+      return request.auth != null && request.auth.uid in [
+        "1cWBOeSjxth6DGMUk8UhxcKWGuJ3",
+        "uD4ehHLuorZpizrcgVkhNZTGIbk1"
+      ];
     }
 
     match /pedidos/{id} {

@@ -9,7 +9,11 @@ export const firebaseConfig = {
   appId: "1:147269591726:web:42fb083eaebcb8857d033f"
 };
 
-// UID de la cuenta que puede ver los pedidos (Authentication → Usuarios).
-export const ADMIN_UID = "1cWBOeSjxth6DGMUk8UhxcKWGuJ3";
+// UID de las cuentas que pueden ver y gestionar pedidos (Authentication → Usuarios).
+// Al agregar uno aquí, agréguelo también en firestore.rules y vuelva a publicar las reglas.
+export const ADMIN_UIDS = [
+  "1cWBOeSjxth6DGMUk8UhxcKWGuJ3",
+  "uD4ehHLuorZpizrcgVkhNZTGIbk1"
+];
 
 export const FIREBASE_VERSION = "10.12.2";
