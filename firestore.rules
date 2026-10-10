@@ -1,0 +1,29 @@
+rules_version = '2';
+// Copiar en Firebase → Firestore Database → Reglas, reemplazando UID_DE_LA_ADMIN.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function esAdmin() {
+      return request.auth != null && request.auth.uid == "UID_DE_LA_ADMIN";
+    }
+
+    match /pedidos/{id} {
+      // Cualquier cliente puede CREAR un pedido válido; nadie más puede leerlo ni cambiarlo.
+      allow create: if
+        request.resource.data.keys().hasOnly(['codigo','fechaVenta','nombre','celular','entrega','direccion','barrio','hora','pago','notas','items','subtotal','domicilio','total','estado','creado'])
+        && id == request.resource.data.codigo
+        && id.matches('FC-[A-Z0-9]{4}')
+        && request.resource.data.estado == 'nuevo'
+        && request.resource.data.creado == request.time
+        && request.resource.data.nombre is string && request.resource.data.nombre.size() > 0 && request.resource.data.nombre.size() <= 80
+        && request.resource.data.celular is string && request.resource.data.celular.size() >= 10 && request.resource.data.celular.size() <= 20
+        && request.resource.data.notas is string && request.resource.data.notas.size() <= 500
+        && request.resource.data.items is list && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 20
+        && request.resource.data.total is int && request.resource.data.total > 0 && request.resource.data.total <= 400000;
+
+      // Solo la cuenta de la dueña ve y gestiona los pedidos.
+      allow read, delete: if esAdmin();
+      allow update: if esAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado']);
+    }
+  }
+}

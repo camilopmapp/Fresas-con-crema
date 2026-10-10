@@ -209,7 +209,7 @@ footer{text-align:center;color:var(--muted);font-size:13px}
 <div class="bar">
   <div class="bar-in">
     <div class="tot"><small id="totLbl">Total</small><b id="total">$0</b></div>
-    <a class="wa" id="enviar" href="#" target="_blank" rel="noopener" aria-disabled="true">
+    <a class="wa" id="enviar" href="#" rel="noopener" aria-disabled="true">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.2c0-.1-.2-.2-.4-.3Z"/></svg>
       Enviar pedido por WhatsApp
     </a>
@@ -236,7 +236,8 @@ const fmt = n => "$" + n.toLocaleString("es-CO");
 const $ = id => document.getElementById(id);
 const nombres = ["Tradicional","+1 topping","+2 toppings","+3 toppings","Super"];
 let cant = 1, cart = [];
-const codigo = "FC-" + Math.random().toString(36).slice(2,6).toUpperCase();
+const nuevoCodigo = ()=>"FC-" + Math.random().toString(36).slice(2,6).toUpperCase();
+let codigo = nuevoCodigo();
 
 $("fecha").textContent = CONFIG.fechaVenta;
 $("telTxt").textContent = CONFIG.telefonoVisible;
@@ -314,6 +315,33 @@ function mensaje(){
   return L.join("\n");
 }
 
+function pedidoData(){
+  const {sub,dom,total} = totales(), esDom = entrega()==="Domicilio";
+  return {
+    codigo, fechaVenta: CONFIG.fechaVenta,
+    nombre: $("nombre").value.trim().slice(0,80), celular: $("cel").value.replace(/\D/g,"").slice(0,20),
+    entrega: entrega(), direccion: esDom ? $("dir").value.trim().slice(0,160) : "", barrio: esDom ? $("barrio").value.trim().slice(0,80) : "",
+    hora: $("hora").value, pago: pago(), notas: $("notas").value.trim().slice(0,500),
+    items: cart.map(i=>({cant:i.cant, nombre:i.nombre, toppings:i.toppings, unit:i.unit})),
+    subtotal: sub, domicilio: dom, total
+  };
+}
+
+$("enviar").addEventListener("click", async e=>{
+  const a = e.currentTarget;
+  if(a.getAttribute("aria-disabled")==="true"){ e.preventDefault(); return; }
+  e.preventDefault();
+  const url = a.href, label = a.lastChild.textContent;
+  a.lastChild.textContent = " Enviando…"; a.setAttribute("aria-disabled","true");
+  try{
+    if(window.guardarPedido) await Promise.race([window.guardarPedido(pedidoData()), new Promise(r=>setTimeout(r,3000))]);
+  }catch(err){ console.warn("No se pudo guardar el pedido", err); }
+  codigo = nuevoCodigo();
+  a.lastChild.textContent = label;
+  render();
+  location.href = url;
+});
+
 function faltantes(){
   const f = [];
   if(!cart.length) f.push("agrega al menos un vaso");
@@ -386,5 +414,6 @@ try{ const d = JSON.parse(localStorage.getItem("fc-cliente")||"{}"); CAMPOS.forE
 
 refreshBuilder(); render();
 </script>
+<script type="module" src="guardar-pedido.js"></script>
 </body>
 </html>

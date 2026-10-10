@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#B4232B">
+<meta name="robots" content="noindex">
+<title>Pedidos · Fresas con Crema</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&family=Yellowtail&display=swap">
+<style>
+/* Panel de pedidos: resumen del día arriba, filtros por estado, tarjetas de pedido con acciones */
+:root{
+  --bg:#FBF6F2; --surface:#FFFFFF; --ink:#3A1414; --muted:#7D5C58;
+  --berry:#B4232B; --berry-deep:#7E1A1F; --leaf:#2F7A3B; --line:#EEDFD9; --chip:#FCEDEB;
+  --nuevo:#C77700; --nuevo-bg:#FFF2DC; --pagado:#1F6FB2; --pagado-bg:#E3F0FB; --entregado:#2F7A3B; --entregado-bg:#E4F4E6; --cancelado:#7D5C58; --cancelado-bg:#F1E9E7;
+  --font-script:"Yellowtail","Brush Script MT",cursive;
+  --font-display:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+  --font-body:"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1C1112; --surface:#271718; --ink:#F6E9E6; --muted:#C2A29D; --berry:#F0626A; --berry-deep:#FF8F95; --leaf:#7BC788; --line:#3D2627; --chip:#3A2023;
+  --nuevo:#F2B34D; --nuevo-bg:#3A2A12; --pagado:#7DB8EC; --pagado-bg:#16283A; --entregado:#7BC788; --entregado-bg:#17301B; --cancelado:#C2A29D; --cancelado-bg:#2F2223; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1C1112; --surface:#271718; --ink:#F6E9E6; --muted:#C2A29D; --berry:#F0626A; --berry-deep:#FF8F95; --leaf:#7BC788; --line:#3D2627; --chip:#3A2023;
+  --nuevo:#F2B34D; --nuevo-bg:#3A2A12; --pagado:#7DB8EC; --pagado-bg:#16283A; --entregado:#7BC788; --entregado-bg:#17301B; --cancelado:#C2A29D; --cancelado-bg:#2F2223; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.45}
+.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:18px 60px;display:flex;flex-direction:column;gap:16px}
+h1,h2,p{margin:0}
+.brand{font-family:var(--font-script);color:var(--berry);font-size:34px;line-height:1;font-weight:400}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.top small{display:block;color:var(--muted);font-weight:600;font-size:13px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
+input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:12px;width:100%}
+.btn{font:inherit;font-weight:700;border:0;border-radius:12px;padding:12px 16px;cursor:pointer}
+.btn-primary{background:var(--berry);color:#fff}
+.btn-ghost{background:var(--chip);color:var(--berry-deep)}
+.btn-line{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn:focus-visible,input:focus-visible,.chip:focus-visible,a:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
+.err{color:var(--berry);font-weight:600;font-size:14px}
+.datebar{display:flex;gap:8px;align-items:center}
+.datebar input{width:auto;padding:9px 10px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;min-width:0}
+.stat span{display:block;font-size:12px;color:var(--muted);font-weight:700}
+.stat b{font-family:var(--font-display);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+@media (max-width:460px){.stats{grid-template-columns:repeat(2,1fr)}}
+.prep{font-size:14px;color:var(--muted)}
+.prep b{color:var(--ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:inherit;font-size:14px;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.list{display:flex;flex-direction:column;gap:10px}
+.order{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.order[data-e="nuevo"]{--c:var(--nuevo)} .order[data-e="pagado"]{--c:var(--pagado)} .order[data-e="entregado"]{--c:var(--entregado)} .order[data-e="cancelado"]{--c:var(--cancelado);opacity:.7}
+.oh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.oh h3{margin:0;font-family:var(--font-display);font-size:18px;font-weight:600}
+.oh small{color:var(--muted);font-size:13px}
+.pill{flex:none;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:4px 10px;border-radius:999px;color:var(--c);background:var(--cbg)}
+.order[data-e="nuevo"] .pill{--cbg:var(--nuevo-bg)} .order[data-e="pagado"] .pill{--cbg:var(--pagado-bg)} .order[data-e="entregado"] .pill{--cbg:var(--entregado-bg)} .order[data-e="cancelado"] .pill{--cbg:var(--cancelado-bg)}
+.items{margin:0;padding-left:18px;font-size:15px}
+.meta{font-size:14px;color:var(--muted);display:grid;gap:2px}
+.meta b{color:var(--ink)}
+.total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px dashed var(--line);padding-top:8px}
+.total b{font-family:var(--font-display);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts .btn{padding:9px 12px;font-size:14px}
+.acts a{text-decoration:none}
+.empty{color:var(--muted);text-align:center;padding:24px 10px;border:1.5px dashed var(--line);border-radius:16px}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--leaf)}
+.live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--leaf)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1 class="brand">Fresas con Crema</h1><small>Panel de pedidos</small></div>
+    <button class="btn btn-line" id="salir" type="button" hidden>Salir</button>
+  </div>
+
+  <p class="panel err" id="sinConfig" hidden>Falta configurar Firebase en <b>firebase-config.js</b>.</p>
+
+  <form class="panel" id="login" hidden>
+    <h2 style="font-family:var(--font-display);font-weight:600;font-size:20px">Ingresar</h2>
+    <label class="f">Correo <input type="email" id="email" autocomplete="username" required></label>
+    <label class="f">Contraseña <input type="password" id="clave" autocomplete="current-password" required></label>
+    <button class="btn btn-primary" type="submit" id="entrar">Entrar</button>
+    <p class="err" id="loginErr" hidden></p>
+  </form>
+
+  <main id="app" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="top">
+      <div class="datebar"><input type="date" id="dia" aria-label="Día"><span class="live" id="live">En vivo</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span>Pedidos</span><b id="sPed">0</b></div>
+      <div class="stat"><span>Vasos</span><b id="sVas">0</b></div>
+      <div class="stat"><span>Vendido</span><b id="sVen">$0</b></div>
+      <div class="stat"><span>Por cobrar</span><b id="sCob">$0</b></div>
+    </div>
+    <p class="prep" id="prep"></p>
+    <div class="chips" role="group" aria-label="Filtrar por estado" id="chips"></div>
+    <div class="list" id="list"></div>
+  </main>
+</div>
+
+<script type="module">
+import { firebaseConfig, ADMIN_UID, FIREBASE_VERSION } from "./firebase-config.js";
+const $ = id => document.getElementById(id);
+const fmt = n => "$" + (n||0).toLocaleString("es-CO");
+const esc = s => String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+if(!firebaseConfig){ $("sinConfig").hidden = false; throw new Error("Sin configuración"); }
+
+const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;
+const { initializeApp } = await import(`${base}/firebase-app.js`);
+const { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } = await import(`${base}/firebase-auth.js`);
+const { getFirestore, collection, query, where, orderBy, onSnapshot, doc, updateDoc, Timestamp } = await import(`${base}/firebase-firestore.js`);
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app), db = getFirestore(app);
+await setPersistence(auth, browserLocalPersistence).catch(()=>{});
+
+const ESTADOS = { nuevo:"Nuevo", pagado:"Pagado", entregado:"Entregado", cancelado:"Cancelado" };
+let filtro = "activos", pedidos = [], unsub = null, vistos = null;
+
+$("chips").innerHTML = [["activos","Por atender"],["nuevo","Nuevos"],["pagado","Pagados"],["entregado","Entregados"],["cancelado","Cancelados"],["todos","Todos"]]
+  .map(([v,l])=>`<button class="chip" type="button" data-f="${v}" aria-pressed="${v===filtro}">${l}</button>`).join("");
+$("chips").onclick = e=>{
+  const b = e.target.closest(".chip"); if(!b) return;
+  filtro = b.dataset.f;
+  document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed", c===b));
+  pintar();
+};
+
+const hoy = new Date(); hoy.setMinutes(hoy.getMinutes()-hoy.getTimezoneOffset());
+$("dia").value = hoy.toISOString().slice(0,10);
+$("dia").onchange = escuchar;
+
+$("login").onsubmit = async e=>{
+  e.preventDefault(); $("loginErr").hidden = true; $("entrar").disabled = true;
+  try{ await signInWithEmailAndPassword(auth, $("email").value.trim(), $("clave").value); }
+  catch(err){ $("loginErr").textContent = "Correo o contraseña incorrectos. Revisa e intenta de nuevo."; $("loginErr").hidden = false; }
+  $("entrar").disabled = false;
+};
+$("salir").onclick = ()=>signOut(auth);
+
+onAuthStateChanged(auth, user=>{
+  const ok = user && (!ADMIN_UID || user.uid===ADMIN_UID);
+  $("login").hidden = !!ok; $("app").hidden = !ok; $("salir").hidden = !user;
+  if(user && !ok){ $("loginErr").textContent = "Esta cuenta no tiene acceso a los pedidos."; $("loginErr").hidden = false; signOut(auth); }
+  if(ok) escuchar(); else if(unsub){ unsub(); unsub = null; }
+});
+
+function escuchar(){
+  if(unsub) unsub();
+  const [y,m,d] = $("dia").value.split("-").map(Number);
+  const ini = new Date(y,m-1,d), fin = new Date(y,m-1,d+1);
+  const q = query(collection(db,"pedidos"), where("creado",">=",Timestamp.fromDate(ini)), where("creado","<",Timestamp.fromDate(fin)), orderBy("creado","desc"));
+  vistos = null;
+  unsub = onSnapshot(q, snap=>{
+    pedidos = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    const nuevos = pedidos.filter(p=>p.estado==="nuevo").length;
+    document.title = (nuevos ? `(${nuevos}) ` : "") + "Pedidos · Fresas con Crema";
+    if(vistos && navigator.vibrate && snap.docChanges().some(c=>c.type==="added")) try{ navigator.vibrate(200); }catch(e){}
+    vistos = true;
+    $("live").textContent = "En vivo";
+    pintar();
+  }, err=>{ $("live").textContent = "Sin conexión"; console.error(err); });
+}
+
+function pintar(){
+  const validos = pedidos.filter(p=>p.estado!=="cancelado");
+  const vasos = validos.reduce((s,p)=>s+(p.items||[]).reduce((a,i)=>a+i.cant,0),0);
+  $("sPed").textContent = validos.length;
+  $("sVas").textContent = vasos;
+  $("sVen").textContent = fmt(validos.reduce((s,p)=>s+p.total,0));
+  $("sCob").textContent = fmt(validos.filter(p=>p.estado==="nuevo").reduce((s,p)=>s+p.total,0));
+
+  const tops = {};
+  validos.filter(p=>p.estado!=="entregado").forEach(p=>(p.items||[]).forEach(i=>i.toppings.forEach(t=>tops[t]=(tops[t]||0)+i.cant)));
+  const pend = validos.filter(p=>p.estado!=="entregado").reduce((s,p)=>s+(p.items||[]).reduce((a,i)=>a+i.cant,0),0);
+  $("prep").innerHTML = pend ? `Por preparar: <b>${pend} ${pend===1?"vaso":"vasos"}</b>` + (Object.keys(tops).length ? " · " + Object.entries(tops).map(([t,n])=>`${esc(t)} <b>${n}</b>`).join(" · ") : "") : "";
+
+  const lista = pedidos.filter(p=> filtro==="todos" ? true : filtro==="activos" ? (p.estado==="nuevo"||p.estado==="pagado") : p.estado===filtro);
+  if(!lista.length){ $("list").innerHTML = `<p class="empty">${pedidos.length ? "No hay pedidos en este filtro." : "Aún no hay pedidos este día. Aparecerán aquí apenas un cliente toque Enviar."}</p>`; return; }
+
+  $("list").innerHTML = lista.map(p=>{
+    const hora = p.creado?.toDate ? p.creado.toDate().toLocaleTimeString("es-CO",{hour:"numeric",minute:"2-digit"}) : "";
+    const items = (p.items||[]).map(i=>`<li>${i.cant} × ${esc(i.nombre)}${i.toppings.length?` <span style="color:var(--muted)">(${i.toppings.map(esc).join(", ")})</span>`:""}</li>`).join("");
+    const dir = p.entrega==="Domicilio" ? `<span>📍 <b>${esc(p.direccion)}</b>${p.barrio?`, ${esc(p.barrio)}`:""}</span>` : `<span>🛍️ <b>Recoge</b></span>`;
+    const cel = String(p.celular||"");
+    const sig = p.estado==="nuevo" ? ["pagado","Marcar pagado"] : p.estado==="pagado" ? ["entregado","Marcar entregado"] : null;
+    return `<article class="order" data-e="${p.estado}">
+      <div class="oh"><div><h3>${esc(p.nombre)}</h3><small>${esc(p.codigo)} · ${hora} · entrega ${esc(p.hora)}</small></div><span class="pill">${ESTADOS[p.estado]||esc(p.estado)}</span></div>
+      <ul class="items">${items}</ul>
+      <div class="meta">${dir}<span>💳 <b>${esc(p.pago)}</b> · 📱 ${esc(cel)}</span>${p.notas?`<span>📝 ${esc(p.notas)}</span>`:""}</div>
+      <div class="total"><span style="color:var(--muted);font-size:14px">${p.domicilio?`Incluye domicilio ${fmt(p.domicilio)}`:""}</span><b>${fmt(p.total)}</b></div>
+      <div class="acts">
+        ${sig?`<button class="btn btn-primary" data-id="${esc(p.id)}" data-e="${sig[0]}" type="button">${sig[1]}</button>`:""}
+        ${cel?`<a class="btn btn-ghost" href="https://wa.me/57${esc(cel)}" target="_blank" rel="noopener">WhatsApp</a>`:""}
+        ${p.estado!=="cancelado"&&p.estado!=="entregado"?`<button class="btn btn-line" data-id="${esc(p.id)}" data-e="cancelado" type="button">Cancelar</button>`:""}
+        ${p.estado==="cancelado"||p.estado==="entregado"?`<button class="btn btn-line" data-id="${esc(p.id)}" data-e="nuevo" type="button">Reabrir</button>`:""}
+      </div>
+    </article>`;
+  }).join("");
+}
+
+$("list").onclick = async e=>{
+  const b = e.target.closest("button[data-id]"); if(!b) return;
+  if(b.dataset.e==="cancelado" && b.dataset.confirm!=="1"){ b.dataset.confirm="1"; b.textContent="¿Seguro? Toca otra vez"; setTimeout(()=>{ if(b.isConnected){ b.dataset.confirm=""; b.textContent="Cancelar"; } },3000); return; }
+  b.disabled = true;
+  try{ await updateDoc(doc(db,"pedidos",b.dataset.id), { estado: b.dataset.e }); }
+  catch(err){ b.disabled = false; alert("No se pudo actualizar. Revisa la conexión."); }
+};
+</script>
+</body>
+</html>
