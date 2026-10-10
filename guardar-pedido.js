@@ -1,4 +1,4 @@
-// Guarda cada pedido en Firestore antes de abrir WhatsApp.
+// Guarda cada pedido en Firestore.
 import { firebaseConfig, FIREBASE_VERSION } from "./firebase-config.js";
 
 if (firebaseConfig) {

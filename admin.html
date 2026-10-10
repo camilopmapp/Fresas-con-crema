@@ -72,6 +72,8 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(
 .empty{color:var(--muted);text-align:center;padding:24px 10px;border:1.5px dashed var(--line);border-radius:16px}
 .live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--leaf)}
 .live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--leaf)}
+.range{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#alertas[aria-pressed="true"]{background:var(--leaf);color:#fff}
 </style>
 </head>
 <body>
@@ -94,6 +96,7 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(
   <main id="app" hidden style="display:flex;flex-direction:column;gap:14px">
     <div class="top">
       <div class="datebar"><input type="date" id="dia" aria-label="Día"><span class="live" id="live">En vivo</span></div>
+      <button class="btn btn-ghost" id="alertas" type="button" aria-pressed="false">🔔 Activar alertas</button>
     </div>
     <div class="stats">
       <div class="stat"><span>Pedidos</span><b id="sPed">0</b></div>
@@ -104,6 +107,16 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(
     <p class="prep" id="prep"></p>
     <div class="chips" role="group" aria-label="Filtrar por estado" id="chips"></div>
     <div class="list" id="list"></div>
+
+    <section class="panel" aria-labelledby="expT">
+      <h2 id="expT" style="font-family:var(--font-display);font-weight:600;font-size:18px">Descargar Excel</h2>
+      <div class="range">
+        <label class="f">Desde <input type="date" id="desde"></label>
+        <label class="f">Hasta <input type="date" id="hasta"></label>
+      </div>
+      <button class="btn btn-primary" id="excel" type="button">Descargar Excel</button>
+      <p class="prep" id="expMsg">Incluye tres hojas: Pedidos, Detalle por vaso y Resumen.</p>
+    </section>
   </main>
 </div>
 
@@ -118,7 +131,7 @@ if(!firebaseConfig){ $("sinConfig").hidden = false; throw new Error("Sin configu
 const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;
 const { initializeApp } = await import(`${base}/firebase-app.js`);
 const { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } = await import(`${base}/firebase-auth.js`);
-const { getFirestore, collection, query, where, orderBy, onSnapshot, doc, updateDoc, Timestamp } = await import(`${base}/firebase-firestore.js`);
+const { getFirestore, collection, query, where, orderBy, onSnapshot, getDocs, doc, updateDoc, Timestamp } = await import(`${base}/firebase-firestore.js`);
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app), db = getFirestore(app);
@@ -165,7 +178,7 @@ function escuchar(){
     pedidos = snap.docs.map(d=>({id:d.id, ...d.data()}));
     const nuevos = pedidos.filter(p=>p.estado==="nuevo").length;
     document.title = (nuevos ? `(${nuevos}) ` : "") + "Pedidos · Fresas con Crema";
-    if(vistos && navigator.vibrate && snap.docChanges().some(c=>c.type==="added")) try{ navigator.vibrate(200); }catch(e){}
+    if(vistos && snap.docChanges().some(c=>c.type==="added")) avisar();
     vistos = true;
     $("live").textContent = "En vivo";
     pintar();
@@ -208,6 +221,117 @@ function pintar(){
     </article>`;
   }).join("");
 }
+
+/* ===== Alertas de pedidos nuevos ===== */
+let audio = null, wake = null, alertasOn = false;
+function sonar(){
+  if(!audio) return;
+  const t0 = audio.currentTime;
+  [[880,0],[1175,.18],[1568,.36]].forEach(([f,dt])=>{
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = "sine"; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t0+dt); g.gain.exponentialRampToValueAtTime(0.35, t0+dt+.02); g.gain.exponentialRampToValueAtTime(0.0001, t0+dt+.16);
+    o.connect(g).connect(audio.destination); o.start(t0+dt); o.stop(t0+dt+.18);
+  });
+}
+function avisar(){
+  if(!alertasOn) return;
+  sonar();
+  try{ navigator.vibrate && navigator.vibrate([200,100,200]); }catch(e){}
+}
+async function pedirPantalla(){
+  try{ if(alertasOn && "wakeLock" in navigator && document.visibilityState==="visible") wake = await navigator.wakeLock.request("screen"); }catch(e){}
+}
+document.addEventListener("visibilitychange", pedirPantalla);
+$("alertas").onclick = async ()=>{
+  alertasOn = !alertasOn;
+  $("alertas").setAttribute("aria-pressed", alertasOn);
+  $("alertas").textContent = alertasOn ? "🔔 Alertas activas" : "🔔 Activar alertas";
+  if(alertasOn){
+    try{ audio = audio || new (window.AudioContext||window.webkitAudioContext)(); await audio.resume(); sonar(); }catch(e){}
+    pedirPantalla();
+  } else { try{ wake && wake.release(); }catch(e){} wake = null; }
+};
+
+/* ===== Exportar a Excel ===== */
+$("desde").value = $("dia").value; $("hasta").value = $("dia").value;
+function cargarSheetJS(){
+  if(window.XLSX) return Promise.resolve();
+  return new Promise((res,rej)=>{
+    const sc = document.createElement("script");
+    sc.src = "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
+    sc.onload = res; sc.onerror = ()=>rej(new Error("No se pudo cargar el generador de Excel"));
+    document.head.appendChild(sc);
+  });
+}
+const f2 = n => String(n).padStart(2,"0");
+const fecha = d => `${d.getFullYear()}-${f2(d.getMonth()+1)}-${f2(d.getDate())}`;
+const horaTxt = d => `${f2(d.getHours())}:${f2(d.getMinutes())}`;
+
+$("excel").onclick = async ()=>{
+  const btn = $("excel"), msg = $("expMsg");
+  const [a,b] = [$("desde").value, $("hasta").value];
+  if(!a || !b || a>b){ msg.textContent = "Revisa las fechas: «Desde» debe ser anterior o igual a «Hasta»."; return; }
+  btn.disabled = true; btn.textContent = "Preparando…";
+  try{
+    await cargarSheetJS();
+    const [y1,m1,d1] = a.split("-").map(Number), [y2,m2,d2] = b.split("-").map(Number);
+    const q = query(collection(db,"pedidos"), where("creado",">=",Timestamp.fromDate(new Date(y1,m1-1,d1))), where("creado","<",Timestamp.fromDate(new Date(y2,m2-1,d2+1))), orderBy("creado","asc"));
+    const ps = (await getDocs(q)).docs.map(d=>({id:d.id,...d.data()}));
+    if(!ps.length){ msg.textContent = "No hay pedidos en ese rango de fechas."; return; }
+
+    const filasP = [], filasD = [];
+    ps.forEach(p=>{
+      const c = p.creado?.toDate ? p.creado.toDate() : null;
+      const vasos = (p.items||[]).reduce((s,i)=>s+i.cant,0);
+      filasP.push({"Código":p.codigo,"Fecha":c?fecha(c):"","Hora":c?horaTxt(c):"","Cliente":p.nombre,"Celular":p.celular,"Entrega":p.entrega,"Dirección":p.direccion,"Barrio":p.barrio,"Hora deseada":p.hora,"Pago":p.pago,"Estado":ESTADOS[p.estado]||p.estado,"Vasos":vasos,"Subtotal":p.subtotal,"Domicilio":p.domicilio,"Total":p.total,"Notas":p.notas});
+      (p.items||[]).forEach(i=>filasD.push({"Código":p.codigo,"Fecha":c?fecha(c):"","Cliente":p.nombre,"Tipo":i.nombre,"Toppings":i.toppings.join(", ")||"Ninguno","Cantidad":i.cant,"Precio unitario":i.unit,"Total":i.unit*i.cant,"Estado":ESTADOS[p.estado]||p.estado}));
+    });
+
+    const validos = ps.filter(p=>p.estado!=="cancelado");
+    const vasosDe = p => p.items.reduce((x,i)=>x+i.cant,0);
+    const R = [], dinero = new Set();
+    const fila = (row, cols=[]) => { cols.forEach(c=>dinero.add(R.length+":"+c)); R.push(row); };
+    fila(["Resumen de ventas"]); fila(["Desde", a]); fila(["Hasta", b]);
+    fila(["Pedidos (sin cancelados)", validos.length]); fila(["Cancelados", ps.length-validos.length]);
+    fila(["Vasos vendidos", validos.reduce((s,p)=>s+vasosDe(p),0)]);
+    fila(["Total vendido", validos.reduce((s,p)=>s+p.total,0)],[1]);
+    fila(["Cobrado (pagado o entregado)", validos.filter(p=>p.estado!=="nuevo").reduce((s,p)=>s+p.total,0)],[1]);
+    fila(["Por cobrar (nuevo)", validos.filter(p=>p.estado==="nuevo").reduce((s,p)=>s+p.total,0)],[1]);
+    fila(["Domicilios", validos.filter(p=>p.domicilio>0).length]);
+    fila([]); fila(["Ventas por día","Pedidos","Vasos","Total"]);
+    const porDia = {};
+    validos.forEach(p=>{ const k = p.creado?.toDate ? fecha(p.creado.toDate()) : "Sin fecha"; const o = porDia[k] ||= [0,0,0]; o[0]++; o[1]+=vasosDe(p); o[2]+=p.total; });
+    Object.entries(porDia).forEach(([k,v])=>fila([k,...v],[3]));
+    fila([]); fila(["Por forma de pago","Pedidos","Total"]);
+    const porPago = {}; validos.forEach(p=>{ const o = porPago[p.pago] ||= [0,0]; o[0]++; o[1]+=p.total; });
+    Object.entries(porPago).forEach(([k,v])=>fila([k,...v],[2]));
+    fila([]); fila(["Por tipo de vaso","Vasos","Total"]);
+    const porTipo = {}; validos.forEach(p=>p.items.forEach(i=>{ const o = porTipo[i.nombre] ||= [0,0]; o[0]+=i.cant; o[1]+=i.unit*i.cant; }));
+    Object.entries(porTipo).forEach(([k,v])=>fila([k,...v],[2]));
+    fila([]); fila(["Toppings usados","Porciones"]);
+    const porTop = {}; validos.forEach(p=>p.items.forEach(i=>i.toppings.forEach(t=>porTop[t]=(porTop[t]||0)+i.cant)));
+    Object.entries(porTop).sort((x,y)=>y[1]-x[1]).forEach(([k,v])=>fila([k,v]));
+
+    const wb = XLSX.utils.book_new();
+    const hoja = (rows, widths, money) => {
+      const ws = Array.isArray(rows[0]) ? XLSX.utils.aoa_to_sheet(rows) : XLSX.utils.json_to_sheet(rows);
+      ws["!cols"] = widths.map(w=>({wch:w}));
+      const rg = XLSX.utils.decode_range(ws["!ref"]);
+      for(let r=rg.s.r; r<=rg.e.r; r++) for(let c=rg.s.c; c<=rg.e.c; c++){
+        const cell = ws[XLSX.utils.encode_cell({r,c})];
+        if(cell && cell.t==="n" && money(r,c)) cell.z = '"$"#,##0';
+      }
+      return ws;
+    };
+    XLSX.utils.book_append_sheet(wb, hoja(filasP,[9,11,7,22,12,10,26,14,16,9,10,6,10,10,10,30],(r,c)=>r>0&&c>=12&&c<=14), "Pedidos");
+    XLSX.utils.book_append_sheet(wb, hoja(filasD,[9,11,22,14,30,9,15,10,10],(r,c)=>r>0&&(c===6||c===7)), "Detalle");
+    XLSX.utils.book_append_sheet(wb, hoja(R,[30,12,10,12],(r,c)=>dinero.has(r+":"+c)), "Resumen");
+    XLSX.writeFile(wb, `pedidos-fresas_${a}${a!==b?"_a_"+b:""}.xlsx`);
+    msg.textContent = `Listo: ${ps.length} ${ps.length===1?"pedido":"pedidos"} exportados.`;
+  }catch(err){ console.error(err); msg.textContent = "No se pudo generar el Excel. Revisa la conexión e intenta de nuevo."; }
+  finally{ btn.disabled = false; btn.textContent = "Descargar Excel"; }
+};
 
 $("list").onclick = async e=>{
   const b = e.target.closest("button[data-id]"); if(!b) return;

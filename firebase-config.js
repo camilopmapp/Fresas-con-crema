@@ -1,5 +1,5 @@
 // Datos del proyecto de Firebase (no son secretos: la seguridad la dan las reglas de Firestore).
-// Mientras firebaseConfig sea null, la página de pedidos funciona solo por WhatsApp.
+// Si firebaseConfig es null, los pedidos no se pueden guardar.
 export const firebaseConfig = {
   apiKey: "AIzaSyD9liC5XOQPSMSwdNCwgdSgEjUc0GA1gRM",
   authDomain: "fresas-con-crema-f6fec.firebaseapp.com",
