@@ -39,21 +39,13 @@ body::after{content:"";position:fixed;inset:0 0 auto 0;height:340px;z-index:-1;p
   background:radial-gradient(ellipse 70% 100% at 50% 0%, var(--glow), transparent 70%)}
 .wrap{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:20px 140px;display:flex;flex-direction:column;gap:22px}
 h1,h2{margin:0;text-wrap:balance}
-header.hero{position:relative;overflow:hidden;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;padding:30px 16px 24px;border-radius:26px;border:1px solid var(--line);
+header.hero{position:relative;overflow:hidden;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;padding:20px 16px 18px;border-radius:24px;border:1px solid var(--line);
   background:radial-gradient(90% 70% at 15% 0%,var(--surface) 0,transparent 70%),radial-gradient(80% 90% at 100% 100%,var(--chip) 0,transparent 65%),radial-gradient(70% 60% at 0% 100%,var(--glow) 0,transparent 70%),var(--surface)}
-.hero > *:not(.berry){position:relative;z-index:1}
-.berry{position:absolute;pointer-events:none;filter:drop-shadow(0 6px 8px rgb(80 10 14 / .25))}
-.berry.b1{width:92px;left:-22px;top:18px;transform:rotate(-22deg)}
-.berry.b2{width:78px;right:-18px;top:-14px;transform:rotate(28deg)}
-.berry.b3{width:60px;right:-6px;bottom:-14px;transform:rotate(-12deg)}
-.berry.b4{width:44px;left:6px;bottom:-10px;transform:rotate(16deg);opacity:.9}
-.kicker{font-family:var(--font-display);font-weight:600;font-size:15px;color:var(--ink)}
-.brand{display:flex;flex-direction:column;align-items:center;margin-top:4px}
-.brand .script{font-size:64px;line-height:.82;margin:0}
-.brand .con{font-family:var(--font-display);font-weight:600;font-size:14px;letter-spacing:.24em;text-transform:uppercase;color:var(--berry-deep);margin:2px 0 6px}
-.slogan{margin:8px 0 0;font-family:var(--font-display);font-weight:700;font-size:22px;line-height:1.1;color:var(--berry-deep);text-wrap:balance}
-.date{display:inline-block;margin-top:12px;padding:6px 14px;border-radius:999px;background:var(--berry);color:#fff;font-family:var(--font-display);font-weight:600;font-size:14px}
-@media (max-width:380px){.berry.b1{width:72px;left:-24px}.berry.b2{width:64px}.brand .script{font-size:56px}}
+.brand{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;column-gap:.22em;margin:0;font-size:clamp(38px,11.5vw,58px)}
+.brand .script{font-size:1em;line-height:1;margin:0}
+.brand .con{font-family:var(--font-display);font-weight:600;font-size:.3em;letter-spacing:.18em;text-transform:uppercase;color:var(--berry-deep);transform:translateY(-.35em)}
+.slogan{margin:4px 0 0;font-family:var(--font-display);font-weight:700;font-size:22px;line-height:1.1;color:var(--berry-deep);text-wrap:balance}
+.date{display:inline-block;margin-top:10px;padding:6px 14px;border-radius:999px;background:var(--berry);color:#fff;font-family:var(--font-display);font-weight:600;font-size:14px}
 .eyebrow{font-family:var(--font-display);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:13px;color:var(--berry-deep)}
 .script{font-family:var(--font-script);font-size:68px;line-height:.9;color:var(--berry);font-weight:400;margin-top:-2px}
 h2{font-family:var(--font-display);font-weight:600;font-size:20px;display:flex;align-items:baseline;gap:8px}
@@ -143,35 +135,8 @@ footer{text-align:center;color:var(--muted);font-size:13px}
 </head>
 <body>
 
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <defs>
-    <radialGradient id="bg-body" cx="38%" cy="35%" r="75%">
-      <stop offset="0" stop-color="#F2545B"/><stop offset=".55" stop-color="#D1222C"/><stop offset="1" stop-color="#9A1219"/>
-    </radialGradient>
-    <linearGradient id="bg-leaf" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#4DA85A"/><stop offset="1" stop-color="#22672E"/>
-    </linearGradient>
-    <symbol id="berry" viewBox="0 0 100 112">
-      <path d="M50 24C24 22 8 36 11 57c3 22 23 41 39 50 16-9 36-28 39-50 3-21-13-35-39-33Z" fill="url(#bg-body)"/>
-      <ellipse cx="34" cy="44" rx="9" ry="14" fill="#fff" opacity=".22" transform="rotate(-25 34 44)"/>
-      <g fill="#FFE39C">
-        <ellipse cx="30" cy="62" rx="1.6" ry="2.6"/><ellipse cx="44" cy="52" rx="1.6" ry="2.6"/><ellipse cx="58" cy="50" rx="1.6" ry="2.6"/>
-        <ellipse cx="72" cy="58" rx="1.6" ry="2.6"/><ellipse cx="38" cy="76" rx="1.6" ry="2.6"/><ellipse cx="52" cy="68" rx="1.6" ry="2.6"/>
-        <ellipse cx="66" cy="74" rx="1.6" ry="2.6"/><ellipse cx="46" cy="88" rx="1.6" ry="2.6"/><ellipse cx="58" cy="90" rx="1.6" ry="2.6"/>
-        <ellipse cx="24" cy="48" rx="1.6" ry="2.6"/><ellipse cx="78" cy="44" rx="1.6" ry="2.6"/>
-      </g>
-      <path d="M50 30 36 12l9 15-20-7 15 12-22 3 24 3-6 10 14-9 5 9 5-9 14 9-6-10 24-3-22-3 15-12-20 7 9-15Z" fill="url(#bg-leaf)"/>
-      <path d="M50 26c0-8 2-14 6-20" stroke="#2C6F36" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-    </symbol>
-  </defs>
-</svg>
 <div class="wrap">
   <header class="hero">
-    <svg class="berry b1" viewBox="0 0 100 112" aria-hidden="true"><use href="#berry"/></svg>
-    <svg class="berry b2" viewBox="0 0 100 112" aria-hidden="true"><use href="#berry"/></svg>
-    <svg class="berry b3" viewBox="0 0 100 112" aria-hidden="true"><use href="#berry"/></svg>
-    <svg class="berry b4" viewBox="0 0 100 112" aria-hidden="true"><use href="#berry"/></svg>
-    <span class="kicker">Vuelven las deliciosas</span>
     <h1 class="brand"><span class="script">Fresas</span><span class="con">con</span><span class="script">Crema</span></h1>
     <p class="slogan">Dulzura en cada bocado</p>
     <span class="date" id="fecha"></span>
