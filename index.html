@@ -226,7 +226,6 @@ footer{text-align:center;color:var(--muted);font-size:13px}
 const CONFIG = {
   whatsapp: "573188785621",            // 57 + celular, sin espacios
   telefonoVisible: "(318) 878-5621",
-  fechaVenta: "Sábado 10 de octubre",
   precios: [10000, 12000, 14000, 15000, 16000], // 0,1,2,3,4 toppings
   toppings: ["Arequipe", "Queso", "Sirope de chocolate", "M&M's"],
   domicilio: 2000,                    // 0 = "valor a convenir"
@@ -238,13 +237,14 @@ const CONFIG = {
 /* ================================================= */
 
 const fmt = n => "$" + n.toLocaleString("es-CO");
+const fechaHoy = ()=>{ const d = new Date(), D = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"], M = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"]; return `${D[d.getDay()]} ${d.getDate()} de ${M[d.getMonth()]}`; };
 const $ = id => document.getElementById(id);
 const nombres = ["Tradicional","+1 topping","+2 toppings","+3 toppings","Super"];
 let cant = 1, cart = [];
 const nuevoCodigo = ()=>"FC-" + Math.random().toString(36).slice(2,6).padEnd(4,"0").toUpperCase();
 let codigo = nuevoCodigo();
 
-$("fecha").textContent = CONFIG.fechaVenta;
+$("fecha").textContent = fechaHoy();
 $("telTxt").textContent = CONFIG.telefonoVisible;
 $("domTxt").textContent = CONFIG.domicilio ? "+" + fmt(CONFIG.domicilio) : "valor a convenir";
 
@@ -299,7 +299,7 @@ function mensaje(){
   const {sub,dom,total} = totales();
   const L = [];
   L.push(`*Pedido Fresas con Crema* (${codigo})`);
-  L.push(CONFIG.fechaVenta, "");
+  L.push(fechaHoy(), "");
   cart.forEach((i,k)=>{
     const det = i.toppings.length ? i.toppings.join(", ") : "sin toppings";
     L.push(`${k+1}. ${i.cant} × ${i.nombre} (${det}) — ${fmt(i.unit*i.cant)}`);
@@ -323,7 +323,7 @@ function mensaje(){
 function pedidoData(){
   const {sub,dom,total} = totales(), esDom = entrega()==="Domicilio";
   return {
-    codigo, fechaVenta: CONFIG.fechaVenta,
+    codigo, fechaVenta: fechaHoy(),
     nombre: $("nombre").value.trim().slice(0,80), celular: $("cel").value.replace(/\D/g,"").slice(0,20),
     entrega: entrega(), direccion: esDom ? $("dir").value.trim().slice(0,160) : "", barrio: esDom ? $("barrio").value.trim().slice(0,80) : "",
     hora: $("hora").value, pago: pago(), notas: $("notas").value.trim().slice(0,500),
