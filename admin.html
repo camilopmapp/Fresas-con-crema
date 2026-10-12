@@ -119,6 +119,16 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(
 .cli{width:100%;border-collapse:collapse;font-size:14px}
 .cli td{padding:6px 0;border-bottom:1px dashed var(--line)}
 .cli td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.shop{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:16px;border:1.5px solid var(--leaf);background:var(--entregado-bg)}
+.shop.off{border-color:var(--line);background:var(--surface)}
+.shop b{display:block;font-family:var(--font-display);font-weight:600;font-size:17px}
+.shop small{display:block;color:var(--muted);font-size:13px}
+.switch{flex:none;width:56px;height:32px;border-radius:999px;border:0;background:var(--leaf);position:relative;cursor:pointer;transition:background .15s}
+.switch span{position:absolute;top:4px;left:28px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 3px rgb(0 0 0 / .25)}
+.switch[aria-checked="false"]{background:var(--cancelado)}
+.switch[aria-checked="false"] span{left:4px}
+.switch:disabled{opacity:.5}
+.switch:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -139,6 +149,10 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(
   </form>
 
   <main id="app" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="shop" id="shop">
+      <div><b id="shopT">Tienda abierta</b><small id="shopS">Los clientes pueden hacer pedidos.</small></div>
+      <button class="switch" id="shopBtn" type="button" role="switch" aria-checked="true" aria-labelledby="shopT"><span></span></button>
+    </div>
     <div class="tabs" role="tablist" aria-label="Secciones">
       <button class="tab" role="tab" id="tabP" aria-selected="true" aria-controls="vPedidos" type="button">Pedidos</button>
       <button class="tab" role="tab" id="tabV" aria-selected="false" aria-controls="vVentas" type="button">Ventas</button>
@@ -220,7 +234,7 @@ if(!firebaseConfig){ $("sinConfig").hidden = false; throw new Error("Sin configu
 const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;
 const { initializeApp } = await import(`${base}/firebase-app.js`);
 const { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } = await import(`${base}/firebase-auth.js`);
-const { getFirestore, collection, query, where, orderBy, onSnapshot, getDocs, doc, updateDoc, deleteDoc, Timestamp } = await import(`${base}/firebase-firestore.js`);
+const { getFirestore, collection, query, where, orderBy, onSnapshot, getDocs, doc, setDoc, updateDoc, deleteDoc, Timestamp } = await import(`${base}/firebase-firestore.js`);
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app), db = getFirestore(app);
@@ -254,8 +268,29 @@ onAuthStateChanged(auth, user=>{
   const ok = user && ADMIN_UIDS.includes(user.uid);
   $("login").hidden = !!ok; $("app").hidden = !ok; $("salir").hidden = !user;
   if(user && !ok){ $("loginErr").textContent = "Esta cuenta no tiene acceso a los pedidos."; $("loginErr").hidden = false; signOut(auth); }
-  if(ok) escuchar(); else if(unsub){ unsub(); unsub = null; }
+  if(ok){ escuchar(); escucharTienda(); } else if(unsub){ unsub(); unsub = null; }
 });
+
+/* ===== Abierto / cerrado ===== */
+let tiendaAbierta = true, unsubTienda = null;
+function pintarTienda(){
+  $("shop").classList.toggle("off", !tiendaAbierta);
+  $("shopBtn").setAttribute("aria-checked", tiendaAbierta);
+  $("shopT").textContent = tiendaAbierta ? "Tienda abierta" : "Tienda cerrada";
+  $("shopS").textContent = tiendaAbierta ? "Los clientes pueden hacer pedidos." : "Los clientes ven el menú pero no pueden pedir.";
+}
+function escucharTienda(){
+  if(unsubTienda) return;
+  unsubTienda = onSnapshot(doc(db,"config","tienda"), s=>{ tiendaAbierta = s.exists() ? s.data().abierto !== false : true; pintarTienda(); },
+    err=>{ console.error(err); $("shopS").textContent = "No se pudo leer el estado. Revisa que las reglas estén publicadas."; });
+}
+$("shopBtn").onclick = async ()=>{
+  const b = $("shopBtn"), nuevo = !tiendaAbierta;
+  b.disabled = true;
+  try{ await setDoc(doc(db,"config","tienda"), { abierto: nuevo }); tiendaAbierta = nuevo; pintarTienda(); }
+  catch(err){ console.error(err); $("shopS").textContent = "No se pudo cambiar. Revisa la conexión o que las reglas estén publicadas."; }
+  b.disabled = false;
+};
 
 function escuchar(){
   if(unsub) unsub();

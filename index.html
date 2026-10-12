@@ -132,6 +132,10 @@ textarea{min-height:70px;resize:vertical}
 .sum li{display:flex;justify-content:space-between;gap:10px}
 .sum .tt{border-top:1px dashed var(--line);padding-top:8px;font-weight:800;font-size:18px}
 .hint{font-size:14px;color:var(--muted);margin:0}
+/* Tienda cerrada */
+.closed{display:flex;flex-direction:column;gap:2px;text-align:center;padding:14px 16px;border-radius:16px;background:var(--ink);color:var(--bg)}
+.closed b{font-family:var(--font-display);font-weight:600;font-size:18px}
+.closed span{font-size:14px;opacity:.85}
 /* Barra inferior */
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 24px rgb(0 0 0 / .06)}
 .bar-in{max-width:520px;margin:0 auto;display:flex;align-items:center;gap:14px}
@@ -152,6 +156,11 @@ footer{text-align:center;color:var(--muted);font-size:13px}
     <p class="slogan">Dulzura en cada bocado</p>
     <span class="date" id="fecha"></span>
   </header>
+
+  <div class="closed" id="cerrado" role="status" hidden>
+    <b>Hoy no estamos recibiendo pedidos</b>
+    <span>Puedes mirar el menú. Pronto anunciaremos la próxima venta.</span>
+  </div>
 
   <section aria-labelledby="h1s">
     <h2 id="h1s"><span class="step">Paso 1</span> Arma tu vaso</h2>
@@ -332,7 +341,13 @@ function pedidoData(){
   };
 }
 
-let enviando = false, errorEnvio = false;
+let enviando = false, errorEnvio = false, abierto = true;
+window.ponerTienda = a => {
+  abierto = a;
+  $("cerrado").hidden = a; $("fecha").hidden = !a;
+  $("enviar").textContent = a ? "Confirmar pedido" : "Cerrado hoy";
+  render();
+};
 const esperar = ms => new Promise((_,rej)=>setTimeout(()=>rej(new Error("tiempo")), ms));
 async function guardarListo(){
   for(let i=0;i<50 && !window.guardarPedido;i++) await new Promise(r=>setTimeout(r,100));
@@ -350,7 +365,7 @@ $("enviar").addEventListener("click", async ()=>{
     try{ const g = await guardarListo(); await Promise.race([g(p), esperar(10000)]); ok = true; }
     catch(err){ console.warn("No se pudo guardar el pedido", err); codigo = nuevoCodigo(); }
   }
-  enviando = false; btn.textContent = "Confirmar pedido";
+  enviando = false; btn.textContent = abierto ? "Confirmar pedido" : "Cerrado hoy";
   if(ok){
     mostrarConfirmacion(p);
     cart = []; codigo = nuevoCodigo(); $("notas").value = "";
@@ -401,6 +416,7 @@ function mostrarConfirmacion(p){
 
 function faltantes(){
   const f = [];
+  if(!abierto) return ["hoy no estamos recibiendo pedidos"];
   if(!cart.length) f.push("agrega al menos un vaso");
   if(!$("nombre").value.trim()) f.push("tu nombre");
   if($("cel").value.replace(/\D/g,"").length < 10) f.push("un celular de 10 dígitos");
@@ -440,7 +456,8 @@ function render(){
 
   const f = faltantes(), btn = $("enviar");
   if(!enviando) btn.disabled = f.length>0;
-  if(f.length){ $("err").hidden = false; $("err").textContent = "Para confirmar falta: " + f.join(", ") + "."; }
+  if(!abierto){ $("err").hidden = true; }
+  else if(f.length){ $("err").hidden = false; $("err").textContent = "Para confirmar falta: " + f.join(", ") + "."; }
   else if(!errorEnvio){ $("err").hidden = true; }
   guardar();
 }

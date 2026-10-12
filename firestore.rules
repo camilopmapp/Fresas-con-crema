@@ -10,9 +10,20 @@ service cloud.firestore {
       ];
     }
 
+    function tiendaAbierta() {
+      return !exists(/databases/$(database)/documents/config/tienda)
+        || get(/databases/$(database)/documents/config/tienda).data.abierto != false;
+    }
+
+    // Abierto / cerrado: todos pueden leerlo, solo las administradoras lo cambian.
+    match /config/tienda {
+      allow read: if true;
+      allow write: if esAdmin() && request.resource.data.keys().hasOnly(['abierto']) && request.resource.data.abierto is bool;
+    }
+
     match /pedidos/{id} {
       // Cualquier cliente puede CREAR un pedido válido; nadie más puede leerlo ni cambiarlo.
-      allow create: if
+      allow create: if tiendaAbierta() &&
         request.resource.data.keys().hasOnly(['codigo','fechaVenta','nombre','celular','entrega','direccion','barrio','hora','pago','notas','items','subtotal','domicilio','total','estado','creado'])
         && id == request.resource.data.codigo
         && id.matches('FC-[A-Z0-9]{4}')
