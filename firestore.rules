@@ -21,6 +21,16 @@ service cloud.firestore {
       allow write: if esAdmin() && request.resource.data.keys().hasOnly(['abierto']) && request.resource.data.abierto is bool;
     }
 
+    // Menú: todos lo leen, solo las administradoras lo cambian.
+    match /config/menu {
+      allow read: if true;
+      allow write: if esAdmin()
+        && request.resource.data.keys().hasOnly(['toppings','precios','domicilio'])
+        && request.resource.data.toppings is list && request.resource.data.toppings.size() <= 12
+        && request.resource.data.precios is list && request.resource.data.precios.size() == 5
+        && request.resource.data.domicilio is int && request.resource.data.domicilio >= 0;
+    }
+
     match /pedidos/{id} {
       // Cualquier cliente puede CREAR un pedido válido; nadie más puede leerlo ni cambiarlo.
       allow create: if tiendaAbierta() &&

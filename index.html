@@ -136,6 +136,9 @@ textarea{min-height:70px;resize:vertical}
 .closed{display:flex;flex-direction:column;gap:2px;text-align:center;padding:14px 16px;border-radius:16px;background:var(--ink);color:var(--bg)}
 .closed b{font-family:var(--font-display);font-weight:600;font-size:18px}
 .closed span{font-size:14px;opacity:.85}
+/* Topping agotado */
+.top.agotado{opacity:.55;cursor:not-allowed;border-style:dashed}
+.top .ago{display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 /* Barra inferior */
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 24px rgb(0 0 0 / .06)}
 .bar-in{max-width:520px;margin:0 auto;display:flex;align-items:center;gap:14px}
@@ -255,12 +258,32 @@ let codigo = nuevoCodigo();
 
 $("fecha").textContent = fechaHoy();
 $("telTxt").textContent = CONFIG.telefonoVisible;
-$("domTxt").textContent = CONFIG.domicilio ? "+" + fmt(CONFIG.domicilio) : "valor a convenir";
 
-$("tops").innerHTML = CONFIG.toppings.map((t,i)=>
-  `<label class="top"><input type="checkbox" id="t${i}" value="${t}"><span class="dot"></span><span>${t}</span></label>`).join("");
-$("ladder").innerHTML = CONFIG.precios.map((p,i)=>
-  `<div class="rung" data-i="${i}">${i===0?"Tradicional":i===4?"Super":i+" top."}<b>${(p/1000)}k</b></div>`).join("");
+/* ===== Menú: toppings, precios y domicilio (se actualiza desde el panel) ===== */
+const escH = t => String(t).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let MENU = { toppings: CONFIG.toppings.map(n=>({nombre:n, disponible:true})), precios: CONFIG.precios.slice(), domicilio: CONFIG.domicilio };
+const nivel = n => Math.min(n, 4);                       // 4 o más toppings = Super
+const precioPara = n => MENU.precios[nivel(n)];
+const nombrePara = n => nombres[nivel(n)];
+const fmtK = p => (p%1000 ? (p/1000).toLocaleString("es-CO",{maximumFractionDigits:1}) : p/1000) + "k";
+
+function pintarMenu(){
+  const marcados = new Set(elegidos());
+  $("tops").innerHTML = MENU.toppings.map((t,i)=>{
+    const off = !t.disponible;
+    return `<label class="top${off?" agotado":""}"><input type="checkbox" id="t${i}" value="${escH(t.nombre)}" ${off?"disabled":""} ${!off&&marcados.has(t.nombre)?"checked":""}><span class="dot"></span><span>${escH(t.nombre)}${off?'<small class="ago">Agotado</small>':""}</span></label>`;
+  }).join("");
+  $("ladder").innerHTML = MENU.precios.map((p,i)=>
+    `<div class="rung" data-i="${i}">${i===0?"Tradicional":i===4?"Super":i+" top."}<b>${fmtK(p)}</b></div>`).join("");
+  $("domTxt").textContent = MENU.domicilio ? "+" + fmt(MENU.domicilio) : "valor a convenir";
+  cart.forEach(i=>{ i.unit = precioPara(i.toppings.length); i.nombre = nombrePara(i.toppings.length); });
+}
+window.ponerMenu = m => {
+  if(!m || !Array.isArray(m.toppings) || !Array.isArray(m.precios) || m.precios.length!==5) return;
+  MENU = { toppings: m.toppings.filter(t=>t && t.nombre).map(t=>({nombre:String(t.nombre), disponible:t.disponible!==false})),
+           precios: m.precios.map(Number), domicilio: Number(m.domicilio)||0 };
+  pintarMenu(); refreshBuilder(); render();
+};
 $("hora").innerHTML = CONFIG.horas.map(h=>`<option>${h}</option>`).join("");
 
 const PAGOS = [
@@ -271,12 +294,12 @@ const PAGOS = [
 $("pagos").innerHTML = PAGOS.map((p,i)=>
   `<label><input type="radio" name="pago" value="${p.v}" ${i===0?"checked":""}>${p.v}<small>${p.s}</small></label>`).join("");
 
-const elegidos = () => [...document.querySelectorAll("#tops input:checked")].map(x=>x.value);
+function elegidos(){ return [...document.querySelectorAll("#tops input:checked")].map(x=>x.value); }
 function refreshBuilder(){
   const n = elegidos().length;
-  document.querySelectorAll(".rung").forEach(r=>r.classList.toggle("on", +r.dataset.i===n));
+  document.querySelectorAll(".rung").forEach(r=>r.classList.toggle("on", +r.dataset.i===nivel(n)));
   $("cant").textContent = cant;
-  $("sub").textContent = fmt(CONFIG.precios[n]*cant);
+  $("sub").textContent = fmt(precioPara(n)*cant);
 }
 $("tops").addEventListener("change", refreshBuilder);
 $("menos").onclick = ()=>{ if(cant>1){cant--;refreshBuilder();} };
@@ -284,7 +307,7 @@ $("mas").onclick = ()=>{ if(cant<20){cant++;refreshBuilder();} };
 
 $("agregar").onclick = ()=>{
   const t = elegidos(), n = t.length;
-  cart.push({cant, toppings:t, nombre:nombres[n], unit:CONFIG.precios[n]});
+  cart.push({cant, toppings:t, nombre:nombrePara(n), unit:precioPara(n)});
   document.querySelectorAll("#tops input").forEach(x=>x.checked=false);
   cant = 1; refreshBuilder(); render();
   const vasos = cart.reduce((a,i)=>a+i.cant,0), last = cart[cart.length-1];
@@ -298,7 +321,7 @@ $("agregar").onclick = ()=>{
 
 function totales(){
   const sub = cart.reduce((s,i)=>s+i.unit*i.cant,0);
-  const dom = entrega()==="Domicilio" && cart.length ? CONFIG.domicilio : 0;
+  const dom = entrega()==="Domicilio" && cart.length ? MENU.domicilio : 0;
   return {sub, dom, total: sub+dom};
 }
 const entrega = ()=>document.querySelector('input[name=entrega]:checked').value;
@@ -316,9 +339,9 @@ function mensaje(){
   L.push("");
   if(entrega()==="Domicilio"){
     L.push(`Subtotal: ${fmt(sub)}`);
-    L.push(`Domicilio: ${CONFIG.domicilio ? fmt(dom) : "a convenir"}`);
+    L.push(`Domicilio: ${MENU.domicilio ? fmt(dom) : "a convenir"}`);
   }
-  L.push(`*Total: ${fmt(total)}*${entrega()==="Domicilio" && !CONFIG.domicilio ? " + domicilio" : ""}`, "");
+  L.push(`*Total: ${fmt(total)}*${entrega()==="Domicilio" && !MENU.domicilio ? " + domicilio" : ""}`, "");
   L.push(`Nombre: ${$("nombre").value.trim()}`);
   L.push(`Celular: ${$("cel").value.trim()}`);
   L.push(`Entrega: ${entrega()}`);
@@ -434,7 +457,7 @@ function render(){
   $("dirBox").hidden = entrega()!=="Domicilio";
   const {total} = totales();
   $("total").textContent = fmt(total);
-  $("totLbl").textContent = entrega()==="Domicilio" && !CONFIG.domicilio && cart.length ? "Total + domicilio" : "Total";
+  $("totLbl").textContent = entrega()==="Domicilio" && !MENU.domicilio && cart.length ? "Total + domicilio" : "Total";
 
   const p = pago(), box = $("payBox");
   if(p==="Efectivo"){ box.hidden = true; }
@@ -444,7 +467,7 @@ function render(){
     box.innerHTML = `
       <span class="k">${p==="Nequi" ? "Número Nequi" : "Llave Bre-B"}</span>
       <span class="v" id="dato">${dato}</span>
-      <span class="holder">Titular: ${CONFIG.titular} · Valor: <b>${fmt(total)}</b>${entrega()==="Domicilio" && !CONFIG.domicilio ? " + domicilio" : ""}</span>
+      <span class="holder">Titular: ${CONFIG.titular} · Valor: <b>${fmt(total)}</b>${entrega()==="Domicilio" && !MENU.domicilio ? " + domicilio" : ""}</span>
       <div class="row"><button class="btn btn-ghost" type="button" id="copiarDato">Copiar ${p==="Nequi"?"número":"llave"}</button><span class="copied" id="datoOk" hidden>Copiado</span></div>
       <ol>
         <li>Abre ${p==="Nequi" ? "Nequi" : "la app de tu banco o billetera y entra a Bre-B"}.</li>
@@ -479,7 +502,7 @@ const CAMPOS = ["nombre","cel","dir","barrio"];
 function guardar(){ try{ localStorage.setItem("fc-cliente", JSON.stringify(Object.fromEntries(CAMPOS.map(c=>[c,$(c).value])))); }catch(e){} }
 try{ const d = JSON.parse(localStorage.getItem("fc-cliente")||"{}"); CAMPOS.forEach(c=>{ if(d[c]) $(c).value=d[c]; }); }catch(e){}
 
-refreshBuilder(); render();
+pintarMenu(); refreshBuilder(); render();
 </script>
 <script type="module" src="guardar-pedido.js"></script>
 </body>

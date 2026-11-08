@@ -16,4 +16,16 @@ export const ADMIN_UIDS = [
   "uD4ehHLuorZpizrcgVkhNZTGIbk1"
 ];
 
+// Menú inicial que ve el panel si aún no se ha guardado ninguno.
+export const MENU_INICIAL = {
+  toppings: [
+    { nombre: "Arequipe", disponible: true },
+    { nombre: "Queso", disponible: true },
+    { nombre: "Sirope de chocolate", disponible: true },
+    { nombre: "M&M's", disponible: true }
+  ],
+  precios: [10000, 12000, 14000, 15000, 16000],
+  domicilio: 2000
+};
+
 export const FIREBASE_VERSION = "10.12.2";

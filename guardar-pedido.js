@@ -12,6 +12,9 @@ if (firebaseConfig) {
     snap => window.ponerTienda?.(snap.exists() ? snap.data().abierto !== false : true),
     () => window.ponerTienda?.(true));
 
+  // Menú (toppings, precios, domicilio): si no existe o falla, la página usa su menú de respaldo.
+  onSnapshot(doc(db, "config", "menu"), snap => { if (snap.exists()) window.ponerMenu?.(snap.data()); }, () => {});
+
   window.guardarPedido = (p) =>
     setDoc(doc(db, "pedidos", p.codigo), { ...p, estado: "nuevo", creado: serverTimestamp() });
 }

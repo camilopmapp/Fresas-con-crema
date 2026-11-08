@@ -79,7 +79,7 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(
 .btn-danger:disabled{opacity:.4;cursor:not-allowed}
 .del{border:1.5px solid var(--berry);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--chip)}
 .del p{margin:0;font-size:14px}
-.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--chip);border-radius:14px;padding:4px;gap:4px}
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--chip);border-radius:14px;padding:4px;gap:4px}
 .tab{font:inherit;font-weight:800;border:0;border-radius:10px;padding:10px;background:transparent;color:var(--berry-deep);cursor:pointer}
 .tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgb(0 0 0 / .08)}
 .tab:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
@@ -129,6 +129,20 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(
 .switch[aria-checked="false"] span{left:4px}
 .switch:disabled{opacity:.5}
 .switch:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
+.mtops{display:flex;flex-direction:column;gap:8px}
+.mtop{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}
+.mtop input[type=text]{padding:10px}
+.mtop.off input[type=text]{color:var(--muted);text-decoration:line-through}
+.mstate{font:inherit;font-size:13px;font-weight:800;border-radius:999px;padding:7px 10px;border:1.5px solid var(--leaf);background:var(--entregado-bg);color:var(--entregado);cursor:pointer;white-space:nowrap}
+.mstate[aria-pressed="false"]{border-color:var(--line);background:var(--cancelado-bg);color:var(--cancelado)}
+.mdel{font:inherit;font-size:13px;font-weight:700;border:0;background:transparent;color:var(--muted);text-decoration:underline;cursor:pointer;padding:6px 2px}
+.mdel.sure{color:var(--berry)}
+.madd{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.mprecios{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.money{display:flex;align-items:center;gap:6px;font-weight:700}
+.money input{font-variant-numeric:tabular-nums}
+.msave{display:grid;grid-template-columns:1fr auto;gap:10px;position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+.mstate:focus-visible,.mdel:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -156,6 +170,7 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(
     <div class="tabs" role="tablist" aria-label="Secciones">
       <button class="tab" role="tab" id="tabP" aria-selected="true" aria-controls="vPedidos" type="button">Pedidos</button>
       <button class="tab" role="tab" id="tabV" aria-selected="false" aria-controls="vVentas" type="button">Ventas</button>
+      <button class="tab" role="tab" id="tabM" aria-selected="false" aria-controls="vMenu" type="button">Menú</button>
     </div>
 
     <section id="vPedidos" role="tabpanel" aria-labelledby="tabP" class="view">
@@ -220,11 +235,37 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(
         <p class="prep" id="expMsg">Incluye tres hojas: Pedidos, Detalle por vaso y Resumen.</p>
       </section>
     </section>
+    <section id="vMenu" role="tabpanel" aria-labelledby="tabM" class="view" hidden>
+      <section class="panel">
+        <h2 class="sh">Toppings</h2>
+        <p class="prep">Toca el nombre para cambiarlo. Un topping agotado se ve en la página pero no se puede elegir.</p>
+        <div id="mTops" class="mtops"></div>
+        <div class="madd">
+          <input type="text" id="mNuevo" maxlength="30" placeholder="Nuevo topping, ej. Coco" aria-label="Nombre del nuevo topping">
+          <button class="btn btn-ghost" id="mAgregar" type="button">+ Agregar</button>
+        </div>
+      </section>
+      <section class="panel">
+        <h2 class="sh">Precios por vaso</h2>
+        <div class="mprecios" id="mPrecios"></div>
+        <p class="prep">Super aplica cuando el cliente elige 4 o más toppings.</p>
+      </section>
+      <section class="panel">
+        <h2 class="sh">Domicilio</h2>
+        <label class="f">Valor del domicilio <span class="money"><span>$</span><input type="number" id="mDom" min="0" step="500" inputmode="numeric"></span></label>
+        <p class="prep">Escribe 0 si el valor se acuerda con el cliente.</p>
+      </section>
+      <div class="msave">
+        <button class="btn btn-primary" id="mGuardar" type="button" disabled>Guardar cambios</button>
+        <button class="btn btn-line" id="mDeshacer" type="button" disabled>Deshacer</button>
+      </div>
+      <p class="prep" id="mMsg" role="status"></p>
+    </section>
   </main>
 </div>
 
 <script type="module">
-import { firebaseConfig, ADMIN_UIDS, FIREBASE_VERSION } from "./firebase-config.js";
+import { firebaseConfig, ADMIN_UIDS, FIREBASE_VERSION, MENU_INICIAL } from "./firebase-config.js";
 const $ = id => document.getElementById(id);
 const fmt = n => "$" + (n||0).toLocaleString("es-CO");
 const esc = s => String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -468,13 +509,82 @@ $("next").onclick = ()=>{ if(V.k<0){ V.k++; cargarVentas(); } };
 $("desde").onchange = $("hasta").onchange = ()=>cargarVentas();
 
 function mostrarTab(cual){
-  const v = cual==="ventas";
-  $("tabP").setAttribute("aria-selected", !v); $("tabV").setAttribute("aria-selected", v);
-  $("vPedidos").hidden = v; $("vVentas").hidden = !v;
-  if(v) cargarVentas();
+  [["pedidos","tabP","vPedidos"],["ventas","tabV","vVentas"],["menu","tabM","vMenu"]].forEach(([k,t,v])=>{
+    $(t).setAttribute("aria-selected", k===cual); $(v).hidden = k!==cual;
+  });
+  if(cual==="ventas") cargarVentas();
+  if(cual==="menu") escucharMenu();
 }
 $("tabP").onclick = ()=>mostrarTab("pedidos");
 $("tabV").onclick = ()=>mostrarTab("ventas");
+$("tabM").onclick = ()=>mostrarTab("menu");
+
+/* ===== Menú ===== */
+const NIVELES = ["Tradicional","+1 topping","+2 toppings","+3 toppings","Super"];
+const copia = m => JSON.parse(JSON.stringify(m));
+let menuGuardado = null, menuEdit = null, unsubMenu = null, borrarTop = -1;
+function escucharMenu(){
+  if(unsubMenu) return;
+  unsubMenu = onSnapshot(doc(db,"config","menu"), s=>{
+    const m = s.exists() ? s.data() : MENU_INICIAL;
+    const sinCambios = !menuEdit || JSON.stringify(menuEdit)===JSON.stringify(menuGuardado);
+    menuGuardado = copia(m);
+    if(sinCambios){ menuEdit = copia(m); pintarMenuAdmin(); } else marcarCambios();
+  }, err=>{ console.error(err); $("mMsg").textContent = "No se pudo leer el menú. Revisa que las reglas estén publicadas."; if(!menuEdit){ menuGuardado = copia(MENU_INICIAL); menuEdit = copia(MENU_INICIAL); pintarMenuAdmin(); } });
+}
+function marcarCambios(){
+  const cambio = JSON.stringify(menuEdit)!==JSON.stringify(menuGuardado);
+  $("mGuardar").disabled = !cambio; $("mDeshacer").disabled = !cambio;
+  if(cambio) $("mMsg").textContent = "Tienes cambios sin guardar.";
+  else if($("mMsg").textContent==="Tienes cambios sin guardar.") $("mMsg").textContent = "";
+}
+function pintarMenuAdmin(){
+  $("mTops").innerHTML = menuEdit.toppings.length ? menuEdit.toppings.map((t,i)=>`<div class="mtop${t.disponible?"":" off"}">
+      <input type="text" data-i="${i}" maxlength="30" value="${esc(t.nombre)}" aria-label="Nombre del topping ${i+1}">
+      <button class="mstate" type="button" data-st="${i}" aria-pressed="${t.disponible}">${t.disponible?"Disponible":"Agotado"}</button>
+      <button class="mdel${borrarTop===i?" sure":""}" type="button" data-del="${i}">${borrarTop===i?"¿Quitar?":"Quitar"}</button>
+    </div>`).join("") : `<p class="nodata">No hay toppings. Agrega uno abajo.</p>`;
+  $("mPrecios").innerHTML = menuEdit.precios.map((p,i)=>`<label class="f">${NIVELES[i]} <span class="money"><span>$</span><input type="number" data-p="${i}" min="0" step="500" inputmode="numeric" value="${p}"></span></label>`).join("");
+  $("mDom").value = menuEdit.domicilio;
+  marcarCambios();
+}
+$("mTops").addEventListener("input", e=>{ const i = e.target.dataset.i; if(i!==undefined){ menuEdit.toppings[+i].nombre = e.target.value; marcarCambios(); } });
+$("mTops").addEventListener("click", e=>{
+  const st = e.target.closest("[data-st]"), del = e.target.closest("[data-del]");
+  if(st){ const t = menuEdit.toppings[+st.dataset.st]; t.disponible = !t.disponible; borrarTop = -1; pintarMenuAdmin(); }
+  if(del){
+    const i = +del.dataset.del;
+    if(borrarTop!==i){ borrarTop = i; pintarMenuAdmin(); setTimeout(()=>{ if(borrarTop===i){ borrarTop = -1; pintarMenuAdmin(); } }, 3000); return; }
+    menuEdit.toppings.splice(i,1); borrarTop = -1; pintarMenuAdmin();
+  }
+});
+$("mPrecios").addEventListener("input", e=>{ const i = e.target.dataset.p; if(i!==undefined){ menuEdit.precios[+i] = Math.round(Number(e.target.value)||0); marcarCambios(); } });
+$("mDom").addEventListener("input", e=>{ menuEdit.domicilio = Math.max(0, Math.round(Number(e.target.value)||0)); marcarCambios(); });
+const agregarTop = ()=>{
+  const n = $("mNuevo").value.trim();
+  if(!n){ $("mMsg").textContent = "Escribe el nombre del topping."; return; }
+  if(menuEdit.toppings.some(t=>t.nombre.trim().toLowerCase()===n.toLowerCase())){ $("mMsg").textContent = `«${n}» ya está en la lista.`; return; }
+  if(menuEdit.toppings.length>=12){ $("mMsg").textContent = "Máximo 12 toppings."; return; }
+  menuEdit.toppings.push({nombre:n, disponible:true}); $("mNuevo").value = ""; pintarMenuAdmin();
+};
+$("mAgregar").onclick = agregarTop;
+$("mNuevo").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); agregarTop(); } });
+$("mDeshacer").onclick = ()=>{ menuEdit = copia(menuGuardado); borrarTop = -1; pintarMenuAdmin(); $("mMsg").textContent = ""; };
+$("mGuardar").onclick = async ()=>{
+  const m = { toppings: menuEdit.toppings.map(t=>({nombre:t.nombre.trim(), disponible:!!t.disponible})), precios: menuEdit.precios.map(p=>Math.round(p)), domicilio: Math.round(menuEdit.domicilio) };
+  const vacios = m.toppings.some(t=>!t.nombre), nombresL = m.toppings.map(t=>t.nombre.toLowerCase());
+  if(vacios){ $("mMsg").textContent = "Hay un topping sin nombre. Escríbelo o quítalo."; return; }
+  if(new Set(nombresL).size!==nombresL.length){ $("mMsg").textContent = "Hay dos toppings con el mismo nombre."; return; }
+  if(m.precios.some(p=>!(p>0))){ $("mMsg").textContent = "Todos los precios deben ser mayores que $0."; return; }
+  const b = $("mGuardar"); b.disabled = true; b.textContent = "Guardando…";
+  try{
+    await setDoc(doc(db,"config","menu"), m);
+    menuGuardado = copia(m); menuEdit = copia(m); pintarMenuAdmin();
+    const sube = m.precios.every((p,i)=>i===0||p>=m.precios[i-1]);
+    $("mMsg").textContent = "Guardado. La página de pedidos ya muestra el menú nuevo." + (sube ? "" : " Ojo: hay un precio menor que el del nivel anterior.");
+  }catch(err){ console.error(err); $("mMsg").textContent = "No se pudo guardar. Revisa la conexión o que las reglas estén publicadas."; }
+  b.textContent = "Guardar cambios"; marcarCambios();
+};
 let rz; window.addEventListener("resize", ()=>{ clearTimeout(rz); rz = setTimeout(()=>{ if(!$("vVentas").hidden && V.rango) pintarVentas(); }, 200); });
 
 async function cargarVentas(){
